@@ -3,4 +3,4 @@
 // Где их взять: Supabase → Project Settings → API (Project URL и anon / publishable key).
 
 const SUPABASE_URL = "https://https://gethub800.github.io/ghfhgfhfghg/";
-const SUPABASE_KEY = "ВСТАВЬТЕ-КЛЮЧ-СЮДА";
+const SUPABASE_KEY = "sb_publishable_2iPFxiXhIkiaayEiipXBLg_5TkcwewI";
