@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Панель администратора — Exclusive balloons</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --accent: #9d1346;
+    --accent-dark: #7f0f38;
+    --bg: #f6f4f5;
+    --text: #1a1a1a;
+    --muted: #7a7a7a;
+    --line: #d6d2d4;
+    --ok: #1d7a3f;
+    --err: #c0182f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: "Exo 2", "Segoe UI", Arial, sans-serif; font-size: 15px; }
+
+  /* ===== Шапка ===== */
+  .adm-header {
+    background: linear-gradient(90deg, #f6f4f5 40%, #f2f0f1 100%);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .14);
+    padding: 0 16px;
+  }
+  .adm-header__inner {
+    max-width: 1100px; height: 62px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .adm-brand { display: flex; align-items: center; gap: 10px; color: var(--accent); font-size: 22px; font-weight: 500; white-space: nowrap; }
+  .adm-brand img { height: 46px; width: auto; display: block; }
+  .adm-title { font-size: 14px; font-weight: 600; color: var(--muted); text-align: right; }
+
+  /* ===== Раскладка ===== */
+  .adm {
+    max-width: 1100px; margin: 24px auto 40px; padding: 0 16px;
+    display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 24px; align-items: start;
+  }
+  .card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, .1); padding: 20px; }
+  .card h2 { margin: 0 0 16px; font-size: 18px; font-weight: 600; }
+  .form-card { position: sticky; top: 16px; }
+
+  /* ===== Форма ===== */
+  .field { margin-bottom: 14px; }
+  .field label, .field .label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 600; }
+  .field input[type="text"], .field input[type="number"], .field select, .field textarea {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px;
+    background: #fff; color: var(--text); font: inherit; outline: none;
+  }
+  .field textarea { resize: vertical; min-height: 84px; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  .field--row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field--row > div { min-width: 0; }
+
+  .photo-btn {
+    width: 100%; padding: 12px; border: 1.5px dashed var(--line); border-radius: 8px;
+    background: #fbfafa; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .photo-btn:hover { border-color: var(--accent); background: #fff5f8; }
+  .photo-btn:disabled { color: var(--muted); cursor: not-allowed; background: #fbfafa; border-color: var(--line); }
+  .photo-hint { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+
+  .previews { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .preview { position: relative; width: 72px; height: 72px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+  .preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .preview__x {
+    position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; padding: 0;
+    border: 0; border-radius: 50%; background: rgba(0, 0, 0, .65); color: #fff; font-size: 14px; line-height: 20px; cursor: pointer;
+  }
+  .preview__main {
+    position: absolute; left: 0; right: 0; bottom: 0; background: rgba(157, 19, 70, .85);
+    color: #fff; font-size: 10px; text-align: center; padding: 1px 0;
+  }
+
+  .btn {
+    display: inline-block; padding: 10px 18px; border: 0; border-radius: 8px;
+    background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .btn:hover { background: var(--accent-dark); }
+  .btn:disabled { background: #c9c4c6; cursor: not-allowed; }
+  .btn--full { width: 100%; }
+  .btn--ghost { background: #fff; color: var(--accent); border: 1.5px solid var(--accent); padding: 8px 14px; }
+  .btn--ghost:hover { background: #fff5f8; }
+
+  .msg { min-height: 20px; margin: 4px 0 12px; font-size: 13px; }
+  .msg--ok { color: var(--ok); }
+  .msg--err { color: var(--err); }
+
+  /* ===== Список товаров ===== */
+  .list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .list-head h2 { margin: 0; }
+  .stats { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+  .hint { margin: 0 0 16px; padding: 10px 12px; border-radius: 8px; background: #ffe4e6; font-size: 13px; line-height: 1.45; }
+
+  .list { display: grid; gap: 10px; }
+  .item {
+    display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+    padding: 8px; border: 1px solid #eee; border-radius: 8px;
+  }
+  .item img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; display: block; background: #eee; }
+  .item__name { font-weight: 600; overflow-wrap: anywhere; }
+  .item__meta { margin-top: 2px; font-size: 13px; color: var(--muted); }
+  .item__price { color: var(--text); font-weight: 600; }
+  .item__del {
+    padding: 7px 12px; border: 1px solid var(--err); border-radius: 8px; background: #fff;
+    color: var(--err); font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .item__del:hover { background: var(--err); color: #fff; }
+  .empty { padding: 28px 12px; text-align: center; color: var(--muted); }
+
+  /* ===== Планшеты и телефоны ===== */
+  @media (max-width: 820px) {
+    .adm { grid-template-columns: minmax(0, 1fr); margin-top: 16px; }
+    .form-card { position: static; }
+  }
+  @media (max-width: 480px) {
+    .adm-brand { font-size: 18px; }
+    .adm-brand img { height: 38px; }
+    .adm-title { font-size: 12px; }
+    .card { padding: 16px; }
+    .item { grid-template-columns: 56px minmax(0, 1fr); }
+    .item img { width: 56px; height: 56px; }
+    .item__del { grid-column: 1 / -1; }
+  }
+
+  [hidden] { display: none !important; }
+
+  /* ===== Вход ===== */
+  .login { max-width: 400px; margin: 40px auto; padding: 0 16px; }
+  .adm-title { display: flex; align-items: center; gap: 14px; }
+  .btn--small { padding: 6px 12px; font-size: 13px; }
+  .note { margin: 0 0 14px; padding: 10px 12px; border-radius: 8px; background: #ffe4e6; font-size: 13px; line-height: 1.45; }
+  .field input[type="email"], .field input[type="password"] {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px;
+    background: #fff; color: var(--text); font: inherit; outline: none;
+  }
+  .field input[type="email"]:focus, .field input[type="password"]:focus { border-color: var(--accent); }
+</style>
+</head>
+
+<body>
+
+<header class="adm-header">
+  <div class="adm-header__inner">
+    <div class="adm-brand">
+      <img src="data:image/png;base64,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" alt="">
+      <span>Exclusive balloons</span>
+    </div>
+    <div class="adm-title">
+      <span>Панель администратора</span>
+      <button type="button" class="btn btn--ghost btn--small" id="logoutBtn" hidden>Выйти</button>
+    </div>
+  </div>
+</header>
+
+<!-- Вход -->
+<main class="login" id="loginView">
+  <section class="card">
+    <h2>Вход</h2>
+
+    <div class="note" id="configNote" hidden>
+      Сайт ещё не подключён к базе данных. Откройте файл <b>site-config.js</b> и вставьте адрес проекта и ключ.
+    </div>
+
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="email">Почта</label>
+        <input type="email" id="email" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">Пароль</label>
+        <input type="password" id="password" autocomplete="current-password">
+      </div>
+      <div class="msg" id="loginMsg" role="status" aria-live="polite"></div>
+      <button type="submit" class="btn btn--full" id="loginBtn">Войти</button>
+    </form>
+  </section>
+</main>
+
+<!-- Панель -->
+<main class="adm" id="appView" hidden>
+
+  <section class="card form-card">
+    <h2>Новый товар</h2>
+
+    <form id="productForm" novalidate>
+      <div class="field">
+        <label for="name">Название</label>
+        <input type="text" id="name" maxlength="120" autocomplete="off">
+      </div>
+
+      <div class="field field--row">
+        <div>
+          <label for="price">Цена, лей</label>
+          <input type="number" id="price" min="1" step="1" inputmode="numeric">
+        </div>
+        <div>
+          <label for="category">Категория</label>
+          <select id="category">
+            <option value="">Выберите…</option>
+            <option>Шары фольга</option>
+            <option>Цифры</option>
+            <option>Фигуры</option>
+            <option>С надписью</option>
+            <option>Шары латексные</option>
+            <option>Артикулы для праздника</option>
+            <option>Композиции</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="description">Описание</label>
+        <textarea id="description" maxlength="2000"></textarea>
+      </div>
+
+      <div class="field">
+        <span class="label">Фото</span>
+        <input type="file" id="photos" accept="image/*" multiple hidden>
+        <button type="button" class="photo-btn" id="photoBtn">+ Добавить фото</button>
+        <p class="photo-hint">До 5 фото. Первое фото — главное, оно показывается в каталоге.</p>
+        <div class="previews" id="previews"></div>
+      </div>
+
+      <div class="msg" id="formMsg" role="status" aria-live="polite"></div>
+      <button type="submit" class="btn btn--full" id="submitBtn">Добавить товар</button>
+    </form>
+  </section>
+
+  <section class="card list-card">
+    <div class="list-head">
+      <h2>Товары</h2>
+    </div>
+    <p class="stats" id="stats"></p>
+    <div class="list" id="list"></div>
+  </section>
+
+</main>
+
+<script src="site-config.js"></script>
+<script>
+(function () {
+  var URL_ = (typeof SUPABASE_URL !== 'undefined' ? String(SUPABASE_URL) : '').replace(/\/$/, '');
+  var KEY = typeof SUPABASE_KEY !== 'undefined' ? String(SUPABASE_KEY) : '';
+  var configured = /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(URL_) && KEY.length > 40;
+
+  var BUCKET = 'product-images';
+  var SESSION_KEY = 'adminSession';
+  var MAX_PHOTOS = 5;
+  var MAX_SIDE = 900;      // фото уменьшается до 900 px по длинной стороне
+  var THUMB_SIDE = 400;    // маленькая копия главного фото для каталога
+  var QUALITY = 0.8;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var loginView = $('loginView'), appView = $('appView'), logoutBtn = $('logoutBtn');
+  var loginForm = $('loginForm'), emailEl = $('email'), passEl = $('password'), loginMsg = $('loginMsg'), loginBtn = $('loginBtn');
+  var form = $('productForm'), nameEl = $('name'), priceEl = $('price'), catEl = $('category'), descEl = $('description');
+  var fileEl = $('photos'), photoBtn = $('photoBtn'), previewsEl = $('previews');
+  var msgEl = $('formMsg'), submitBtn = $('submitBtn');
+  var listEl = $('list'), statsEl = $('stats');
+
+  var photos = [];   // {file, blob, url}
+  var busy = false;
+
+  /* ---------- сообщения ---------- */
+  function setMsg(el, text, type) {
+    el.textContent = text || '';
+    el.className = 'msg' + (type ? ' msg--' + type : '');
+  }
+  function say(text, type) { setMsg(msgEl, text, type); }
+
+  /* ---------- запросы к базе ---------- */
+  function headers(token, extra) {
+    var h = { apikey: KEY };
+    var bearer = token || (KEY.indexOf('eyJ') === 0 ? KEY : null);
+    if (bearer) h.Authorization = 'Bearer ' + bearer;
+    for (var k in extra) h[k] = extra[k];
+    return h;
+  }
+  function authError() { var e = new Error('auth'); e.auth = true; return e; }
+
+  function getSession() {
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) { return null; }
+  }
+  function saveSession(d) {
+    var s = {
+      access_token: d.access_token,
+      refresh_token: d.refresh_token,
+      expires_at: d.expires_at || Math.floor(Date.now() / 1000) + (d.expires_in || 3600)
+    };
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); } catch (e) {}
+    return s;
+  }
+  function clearSession() { try { localStorage.removeItem(SESSION_KEY); } catch (e) {} }
+
+  function token() {
+    var s = getSession();
+    if (!s || !s.access_token) return Promise.reject(authError());
+    if (s.expires_at * 1000 - Date.now() > 60000) return Promise.resolve(s.access_token);
+    return fetch(URL_ + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: headers(null, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ refresh_token: s.refresh_token })
+    }).then(function (r) {
+      if (!r.ok) throw authError();
+      return r.json();
+    }).then(function (d) { return saveSession(d).access_token; });
+  }
+
+  // запрос от имени администратора
+  function authed(path, opts) {
+    return token().then(function (t) {
+      opts = opts || {};
+      opts.headers = headers(t, opts.headers);
+      return fetch(URL_ + path, opts);
+    }).then(function (r) {
+      if (r.status === 401) throw authError();
+      return r;
+    });
+  }
+
+  function check(r) {
+    if (r.ok) return r;
+    return r.text().then(function (t) {
+      var e = new Error(/row-level security|42501|Unauthorized/i.test(t)
+        ? 'Нет прав на изменение каталога. Проверьте, что в supabase-setup.sql указана ваша почта.'
+        : 'Ошибка сервера (' + r.status + '). Попробуйте ещё раз.');
+      throw e;
+    });
+  }
+
+  function publicUrl(path) { return URL_ + '/storage/v1/object/public/' + BUCKET + '/' + path; }
+  function pathFromUrl(u) {
+    var marker = '/object/public/' + BUCKET + '/';
+    var i = u.indexOf(marker);
+    return i < 0 ? null : u.slice(i + marker.length);
+  }
+
+  function uploadFile(path, blob) {
+    return authed('/storage/v1/object/' + BUCKET + '/' + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'image/jpeg', 'x-upsert': 'false' },
+      body: blob
+    }).then(check);
+  }
+  function removeFiles(paths) {
+    paths = paths.filter(Boolean);
+    if (!paths.length) return Promise.resolve();
+    return authed('/storage/v1/object/' + BUCKET, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefixes: paths })
+    }).catch(function () {});
+  }
+
+  /* ---------- вход / выход ---------- */
+  function showLogin(text) {
+    appView.hidden = true; logoutBtn.hidden = true; loginView.hidden = false;
+    $('configNote').hidden = configured;
+    loginForm.hidden = !configured;
+    setMsg(loginMsg, text || '', text ? 'err' : '');
+  }
+  function showApp() {
+    loginView.hidden = true; appView.hidden = false; logoutBtn.hidden = false;
+    loadList();
+  }
+
+  loginForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = emailEl.value.trim(), pass = passEl.value;
+    if (!email || !pass) return setMsg(loginMsg, 'Введите почту и пароль.', 'err');
+    loginBtn.disabled = true; setMsg(loginMsg, 'Вход…');
+    fetch(URL_ + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: headers(null, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ email: email, password: pass })
+    }).then(function (r) {
+      return r.json().then(function (d) {
+        if (!r.ok) throw new Error(r.status === 400 ? 'Неверная почта или пароль.' : 'Не удалось войти (' + r.status + ').');
+        return d;
+      });
+    }).then(function (d) {
+      saveSession(d);
+      passEl.value = '';
+      setMsg(loginMsg, '');
+      showApp();
+    }).catch(function (err) {
+      setMsg(loginMsg, err instanceof TypeError ? 'Нет связи с сервером. Проверьте интернет.' : err.message, 'err');
+    }).then(function () { loginBtn.disabled = false; });
+  });
+
+  logoutBtn.addEventListener('click', function () { clearSession(); showLogin(''); });
+
+  function handleError(err, out) {
+    if (err && err.auth) { clearSession(); showLogin('Сессия закончилась. Войдите снова.'); return; }
+    var text = err instanceof TypeError ? 'Нет связи с сервером. Проверьте интернет.' : (err && err.message) || 'Что-то пошло не так.';
+    out(text);
+  }
+
+  /* ---------- фото: уменьшение через canvas ---------- */
+  function resize(file, maxSide, quality) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        var w = img.naturalWidth, h = img.naturalHeight;
+        var k = Math.min(1, maxSide / Math.max(w, h));
+        w = Math.round(w * k); h = Math.round(h * k);
+        var c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        var ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { b ? resolve(b) : reject(new Error(file.name)); }, 'image/jpeg', quality);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error(file.name)); };
+      img.src = url;
+    });
+  }
+
+  photoBtn.addEventListener('click', function () { fileEl.click(); });
+
+  fileEl.addEventListener('change', function () {
+    var files = Array.prototype.slice.call(fileEl.files);
+    fileEl.value = '';
+    var free = MAX_PHOTOS - photos.length;
+    if (!files.length) return;
+    if (files.length > free) {
+      say('Можно добавить не больше ' + MAX_PHOTOS + ' фото.', 'err');
+      files = files.slice(0, free);
+    } else { say(''); }
+
+    var failed = 0;
+    Promise.all(files.map(function (f) {
+      return resize(f, MAX_SIDE, QUALITY).then(function (blob) {
+        photos.push({ file: f, blob: blob, url: URL.createObjectURL(blob) });
+      }, function () { failed++; });
+    })).then(function () {
+      if (failed) say('Не удалось прочитать файлов: ' + failed + '. Выберите изображение (JPG, PNG, WEBP).', 'err');
+      renderPreviews();
+    });
+  });
+
+  function renderPreviews() {
+    previewsEl.textContent = '';
+    photos.forEach(function (p, i) {
+      var box = document.createElement('div'); box.className = 'preview';
+      var img = document.createElement('img'); img.src = p.url; img.alt = '';
+      var x = document.createElement('button'); x.type = 'button'; x.className = 'preview__x';
+      x.textContent = '×'; x.setAttribute('aria-label', 'Убрать фото');
+      x.addEventListener('click', function () {
+        if (busy) return;
+        URL.revokeObjectURL(p.url); photos.splice(i, 1); renderPreviews();
+      });
+      box.appendChild(img); box.appendChild(x);
+      if (i === 0) { var m = document.createElement('div'); m.className = 'preview__main'; m.textContent = 'главное'; box.appendChild(m); }
+      previewsEl.appendChild(box);
+    });
+    photoBtn.disabled = photos.length >= MAX_PHOTOS;
+  }
+
+  /* ---------- добавление товара ---------- */
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      var r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+    });
+  }
+
+  function fail(text, el) { say(text, 'err'); if (el && el.focus) el.focus(); }
+
+  function setBusy(v) {
+    busy = v;
+    submitBtn.disabled = v;
+    photoBtn.disabled = v || photos.length >= MAX_PHOTOS;
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (busy) return;
+    var name = nameEl.value.trim();
+    var price = Number(priceEl.value);
+    var category = catEl.value;
+
+    if (!name) return fail('Введите название товара.', nameEl);
+    if (!(price > 0)) return fail('Укажите цену в леях.', priceEl);
+    if (!category) return fail('Выберите категорию.', catEl);
+    if (!photos.length) return fail('Добавьте хотя бы одно фото.', photoBtn);
+
+    var id = uuid();
+    var jobs = photos.map(function (p, i) { return { path: id + '/' + (i + 1) + '.jpg', blob: p.blob }; });
+    var uploaded = [];
+    setBusy(true);
+    say('Подготовка фото…');
+
+    resize(photos[0].file, THUMB_SIDE, 0.75).then(function (thumbBlob) {
+      jobs.push({ path: id + '/thumb.jpg', blob: thumbBlob });
+      var chain = Promise.resolve();
+      jobs.forEach(function (job, i) {
+        chain = chain.then(function () {
+          say('Загрузка фото ' + (i + 1) + ' из ' + jobs.length + '…');
+          return uploadFile(job.path, job.blob).then(function () { uploaded.push(job.path); });
+        });
+      });
+      return chain;
+    }).then(function () {
+      say('Сохранение товара…');
+      var urls = jobs.slice(0, photos.length).map(function (j) { return publicUrl(j.path); });
+      return authed('/rest/v1/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          id: id, name: name, price: Math.round(price), category: category,
+          description: descEl.value.trim(), images: urls, thumb: publicUrl(id + '/thumb.jpg')
+        })
+      }).then(check);
+    }).then(function () {
+      photos.forEach(function (p) { URL.revokeObjectURL(p.url); });
+      photos = [];
+      form.reset();
+      renderPreviews();
+      say('Товар «' + name + '» добавлен. Он уже виден на сайте.', 'ok');
+      loadList();
+    }).catch(function (err) {
+      removeFiles(uploaded);
+      handleError(err, function (t) { say(t, 'err'); });
+    }).then(function () { setBusy(false); });
+  });
+
+  /* ---------- список ---------- */
+  function loadList() {
+    statsEl.textContent = 'Загрузка…';
+    fetch(URL_ + '/rest/v1/products?select=id,name,price,category,images,thumb&order=created_at.desc', { headers: headers(null) })
+      .then(function (r) { if (!r.ok) throw new Error('load'); return r.json(); })
+      .then(renderList)
+      .catch(function () { statsEl.textContent = 'Не удалось загрузить список товаров.'; });
+  }
+
+  function renderList(products) {
+    listEl.textContent = '';
+    if (!products.length) {
+      var empty = document.createElement('div'); empty.className = 'empty';
+      empty.textContent = 'Пока нет ни одного товара.';
+      listEl.appendChild(empty);
+    }
+    products.forEach(function (p) {
+      var row = document.createElement('div'); row.className = 'item';
+      var img = document.createElement('img'); img.src = p.thumb || p.images[0]; img.alt = '';
+      var info = document.createElement('div');
+      var n = document.createElement('div'); n.className = 'item__name'; n.textContent = p.name;
+      var m = document.createElement('div'); m.className = 'item__meta';
+      var pr = document.createElement('span'); pr.className = 'item__price'; pr.textContent = p.price + ' лей';
+      m.appendChild(pr); m.appendChild(document.createTextNode(' · ' + p.category + ' · фото: ' + p.images.length));
+      info.appendChild(n); info.appendChild(m);
+      var del = document.createElement('button'); del.type = 'button'; del.className = 'item__del'; del.textContent = 'Удалить';
+      del.addEventListener('click', function () { removeProduct(p, del); });
+      row.appendChild(img); row.appendChild(info); row.appendChild(del);
+      listEl.appendChild(row);
+    });
+    statsEl.textContent = 'Товаров: ' + products.length;
+  }
+
+  function removeProduct(p, btn) {
+    if (!confirm('Удалить товар «' + p.name + '»?')) return;
+    btn.disabled = true;
+    authed('/rest/v1/products?id=eq.' + encodeURIComponent(p.id), {
+      method: 'DELETE',
+      headers: { Prefer: 'return=representation' }
+    }).then(check).then(function (r) { return r.json(); }).then(function (rows) {
+      if (!rows.length) throw new Error('Не удалось удалить товар: нет прав или он уже удалён.');
+      var paths = (p.images || []).map(pathFromUrl).concat([p.thumb ? pathFromUrl(p.thumb) : null]);
+      return removeFiles(paths);
+    }).then(loadList).catch(function (err) {
+      btn.disabled = false;
+      handleError(err, function (t) { alert(t); });
+    });
+  }
+
+  /* ---------- старт ---------- */
+  renderPreviews();
+  if (!configured) { showLogin(''); return; }
+  token().then(showApp, function () { clearSession(); showLogin(''); });
+})();
+</script>
+</body>
+</html>
