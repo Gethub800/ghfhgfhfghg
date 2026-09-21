@@ -132,6 +132,45 @@
 
   [hidden] { display: none !important; }
 
+  /* ===== Окно просмотра товара ===== */
+  .item { cursor: pointer; }
+  .item:hover { background: #fbf6f8; }
+  .item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .modal {
+    position: fixed; inset: 0; z-index: 100; padding: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, .55);
+  }
+  .modal__box {
+    position: relative; width: min(720px, 100%); max-height: 92vh; overflow: auto;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px;
+    padding: 20px; border-radius: 14px; background: #fff; box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+  }
+  .modal__close {
+    position: absolute; top: 8px; right: 8px; z-index: 1; width: 34px; height: 34px; padding: 0;
+    border: 0; border-radius: 50%; background: rgba(0, 0, 0, .08); color: #1a1a1a;
+    font-size: 22px; line-height: 34px; cursor: pointer;
+  }
+  .modal__close:hover { background: rgba(0, 0, 0, .16); }
+  .modal__photo { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; border-radius: 10px; background: #eee; }
+  .modal__thumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .modal__thumbs button {
+    width: 48px; height: 48px; padding: 0; border: 2px solid transparent; border-radius: 6px;
+    overflow: hidden; background: none; cursor: pointer;
+  }
+  .modal__thumbs button[aria-current="true"] { border-color: var(--accent); }
+  .modal__thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .modal__info { min-width: 0; padding-right: 26px; }
+  .modal__name { margin: 0 0 4px; font-size: 20px; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+  .modal__nameRo { margin-bottom: 8px; font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+  .modal__price { margin-bottom: 4px; font-size: 22px; font-weight: 600; color: var(--accent); }
+  .modal__cat { margin-bottom: 12px; font-size: 13px; color: var(--muted); }
+  .modal__desc { margin: 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+  @media (max-width: 640px) {
+    .modal__box { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 16px; }
+    .modal__info { padding-right: 0; }
+  }
+
   /* ===== Вход ===== */
   .login { max-width: 400px; margin: 40px auto; padding: 0 16px; }
   .adm-title { display: flex; align-items: center; gap: 14px; }
@@ -196,6 +235,12 @@
         <input type="text" id="name" maxlength="120" autocomplete="off">
       </div>
 
+      <div class="field">
+        <label for="nameRo">Название на румынском</label>
+        <input type="text" id="nameRo" maxlength="120" autocomplete="off">
+        <p class="photo-hint">Необязательно. Если не заполнить, на румынской версии сайта покажется русское название.</p>
+      </div>
+
       <div class="field field--row">
         <div>
           <label for="price">Цена, лей</label>
@@ -244,6 +289,24 @@
 
 </main>
 
+<!-- Просмотр товара -->
+<div class="modal" id="viewModal" hidden>
+  <div class="modal__box" role="dialog" aria-modal="true" aria-labelledby="viewName">
+    <button type="button" class="modal__close" id="viewClose" aria-label="Закрыть">×</button>
+    <div class="modal__gallery">
+      <img class="modal__photo" id="viewPhoto" alt="">
+      <div class="modal__thumbs" id="viewThumbs"></div>
+    </div>
+    <div class="modal__info">
+      <h3 class="modal__name" id="viewName"></h3>
+      <div class="modal__nameRo" id="viewNameRo"></div>
+      <div class="modal__price" id="viewPrice"></div>
+      <div class="modal__cat" id="viewCat"></div>
+      <p class="modal__desc" id="viewDesc"></p>
+    </div>
+  </div>
+</div>
+
 <script src="site-config.js"></script>
 <script>
 (function () {
@@ -261,7 +324,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var loginView = $('loginView'), appView = $('appView'), logoutBtn = $('logoutBtn');
   var loginForm = $('loginForm'), emailEl = $('email'), passEl = $('password'), loginMsg = $('loginMsg'), loginBtn = $('loginBtn');
-  var form = $('productForm'), nameEl = $('name'), priceEl = $('price'), catEl = $('category'), descEl = $('description');
+  var form = $('productForm'), nameEl = $('name'), nameRoEl = $('nameRo'), priceEl = $('price'), catEl = $('category'), descEl = $('description');
   var fileEl = $('photos'), photoBtn = $('photoBtn'), previewsEl = $('previews');
   var msgEl = $('formMsg'), submitBtn = $('submitBtn');
   var listEl = $('list'), statsEl = $('stats');
@@ -329,7 +392,9 @@
   function check(r) {
     if (r.ok) return r;
     return r.text().then(function (t) {
-      var e = new Error(/row-level security|42501|Unauthorized/i.test(t)
+      var e = new Error(/name_ro/i.test(t)
+        ? 'В базе ещё нет поля для румынского названия. Запустите обновлённый supabase-setup.sql в Supabase (SQL Editor).'
+        : /row-level security|42501|Unauthorized/i.test(t)
         ? 'Нет прав на изменение каталога. Проверьте, что в supabase-setup.sql указана ваша почта.'
         : 'Ошибка сервера (' + r.status + '). Попробуйте ещё раз.');
       throw e;
@@ -489,6 +554,7 @@
     e.preventDefault();
     if (busy) return;
     var name = nameEl.value.trim();
+    var nameRo = nameRoEl.value.trim();
     var price = Number(priceEl.value);
     var category = catEl.value;
 
@@ -516,13 +582,15 @@
     }).then(function () {
       say('Сохранение товара…');
       var urls = jobs.slice(0, photos.length).map(function (j) { return publicUrl(j.path); });
+      var row = {
+        id: id, name: name, price: Math.round(price), category: category,
+        description: descEl.value.trim(), images: urls, thumb: publicUrl(id + '/thumb.jpg')
+      };
+      if (nameRo) row.name_ro = nameRo;
       return authed('/rest/v1/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-        body: JSON.stringify({
-          id: id, name: name, price: Math.round(price), category: category,
-          description: descEl.value.trim(), images: urls, thumb: publicUrl(id + '/thumb.jpg')
-        })
+        body: JSON.stringify(row)
       }).then(check);
     }).then(function () {
       photos.forEach(function (p) { URL.revokeObjectURL(p.url); });
@@ -540,7 +608,10 @@
   /* ---------- список ---------- */
   function loadList() {
     statsEl.textContent = 'Загрузка…';
-    fetch(URL_ + '/rest/v1/products?select=id,name,price,category,images,thumb&order=created_at.desc', { headers: headers(null) })
+    var base = 'id,name,price,category,description,images,thumb';
+    function get(cols) { return fetch(URL_ + '/rest/v1/products?select=' + cols + '&order=created_at.desc', { headers: headers(null) }); }
+    get(base + ',name_ro')
+      .then(function (r) { return r.ok ? r : get(base); })
       .then(function (r) { if (!r.ok) throw new Error('load'); return r.json(); })
       .then(renderList)
       .catch(function () { statsEl.textContent = 'Не удалось загрузить список товаров.'; });
@@ -563,7 +634,13 @@
       m.appendChild(pr); m.appendChild(document.createTextNode(' · ' + p.category + ' · фото: ' + p.images.length));
       info.appendChild(n); info.appendChild(m);
       var del = document.createElement('button'); del.type = 'button'; del.className = 'item__del'; del.textContent = 'Удалить';
-      del.addEventListener('click', function () { removeProduct(p, del); });
+      del.addEventListener('click', function (e) { e.stopPropagation(); removeProduct(p, del); });
+      row.tabIndex = 0;
+      row.setAttribute('role', 'button');
+      row.addEventListener('click', function () { openView(p); });
+      row.addEventListener('keydown', function (e) {
+        if (e.target === row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openView(p); }
+      });
       row.appendChild(img); row.appendChild(info); row.appendChild(del);
       listEl.appendChild(row);
     });
@@ -585,6 +662,54 @@
       handleError(err, function (t) { alert(t); });
     });
   }
+
+  /* ---------- окно просмотра товара ---------- */
+  var viewModal = $('viewModal'), viewPhoto = $('viewPhoto'), viewThumbs = $('viewThumbs');
+  var viewName = $('viewName'), viewNameRo = $('viewNameRo'), viewPrice = $('viewPrice');
+  var viewCat = $('viewCat'), viewDesc = $('viewDesc'), viewClose = $('viewClose');
+  var viewFocus = null;
+
+  function showPhoto(p, i) {
+    viewPhoto.src = p.images[i];
+    viewPhoto.alt = p.name;
+    Array.prototype.forEach.call(viewThumbs.children, function (b, k) {
+      b.setAttribute('aria-current', k === i ? 'true' : 'false');
+    });
+  }
+
+  function openView(p) {
+    viewName.textContent = p.name;
+    viewNameRo.textContent = p.name_ro ? 'RO: ' + p.name_ro : '';
+    viewNameRo.hidden = !p.name_ro;
+    viewPrice.textContent = p.price + ' лей';
+    viewCat.textContent = p.category || '';
+    viewDesc.textContent = p.description || 'Описание не заполнено.';
+    viewThumbs.textContent = '';
+    if (p.images.length > 1) {
+      p.images.forEach(function (src, i) {
+        var b = document.createElement('button'); b.type = 'button';
+        var im = document.createElement('img'); im.src = src; im.alt = '';
+        b.appendChild(im);
+        b.addEventListener('click', function () { showPhoto(p, i); });
+        viewThumbs.appendChild(b);
+      });
+    }
+    showPhoto(p, 0);
+    viewFocus = document.activeElement;
+    viewModal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    viewClose.focus();
+  }
+
+  function closeView() {
+    if (viewModal.hidden) return;
+    viewModal.hidden = true;
+    document.body.style.overflow = '';
+    if (viewFocus && viewFocus.focus) viewFocus.focus();
+  }
+  viewClose.addEventListener('click', closeView);
+  viewModal.addEventListener('click', function (e) { if (e.target === viewModal) closeView(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeView(); });
 
   /* ---------- старт ---------- */
   renderPreviews();
