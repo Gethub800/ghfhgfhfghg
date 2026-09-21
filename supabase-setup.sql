@@ -21,8 +21,10 @@ create table if not exists public.products (
   created_at timestamptz not null default now()
 );
 
--- Румынское название товара (если таблица уже была создана раньше — эта строка её дополнит)
+-- Румынские тексты и теги (если таблица уже была создана раньше — эти строки её дополнят)
 alter table public.products add column if not exists name_ro text;
+alter table public.products add column if not exists description_ro text;
+alter table public.products add column if not exists tags text[] not null default '{}';
 
 alter table public.products enable row level security;
 
