@@ -165,6 +165,8 @@
   .modal__nameRo { margin-bottom: 8px; font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
   .modal__price { margin-bottom: 4px; font-size: 22px; font-weight: 600; color: var(--accent); }
   .modal__cat { margin-bottom: 12px; font-size: 13px; color: var(--muted); }
+  .modal__descRo { margin-top: 10px; color: var(--muted); }
+  #viewTags { margin: 10px 0 0; }
   .modal__desc { margin: 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
   @media (max-width: 640px) {
     .modal__box { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 16px; }
@@ -267,6 +269,18 @@
       </div>
 
       <div class="field">
+        <label for="descriptionRo">Описание на румынском</label>
+        <textarea id="descriptionRo" maxlength="2000"></textarea>
+        <p class="photo-hint">Необязательно. Если не заполнить, на румынской версии покажется русское описание.</p>
+      </div>
+
+      <div class="field">
+        <label for="tags">Теги для поиска</label>
+        <input type="text" id="tags" maxlength="400" autocomplete="off">
+        <p class="photo-hint">Через запятую, например: день рождения, гелий, розовый. Покупатели смогут найти товар по этим словам.</p>
+      </div>
+
+      <div class="field">
         <span class="label">Фото</span>
         <input type="file" id="photos" accept="image/*" multiple hidden>
         <button type="button" class="photo-btn" id="photoBtn">+ Добавить фото</button>
@@ -303,6 +317,8 @@
       <div class="modal__price" id="viewPrice"></div>
       <div class="modal__cat" id="viewCat"></div>
       <p class="modal__desc" id="viewDesc"></p>
+      <p class="modal__desc modal__descRo" id="viewDescRo"></p>
+      <div class="modal__cat" id="viewTags"></div>
     </div>
   </div>
 </div>
@@ -324,7 +340,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var loginView = $('loginView'), appView = $('appView'), logoutBtn = $('logoutBtn');
   var loginForm = $('loginForm'), emailEl = $('email'), passEl = $('password'), loginMsg = $('loginMsg'), loginBtn = $('loginBtn');
-  var form = $('productForm'), nameEl = $('name'), nameRoEl = $('nameRo'), priceEl = $('price'), catEl = $('category'), descEl = $('description');
+  var form = $('productForm'), nameEl = $('name'), nameRoEl = $('nameRo'), priceEl = $('price'), catEl = $('category'), descEl = $('description'), descRoEl = $('descriptionRo'), tagsEl = $('tags');
   var fileEl = $('photos'), photoBtn = $('photoBtn'), previewsEl = $('previews');
   var msgEl = $('formMsg'), submitBtn = $('submitBtn');
   var listEl = $('list'), statsEl = $('stats');
@@ -392,8 +408,8 @@
   function check(r) {
     if (r.ok) return r;
     return r.text().then(function (t) {
-      var e = new Error(/name_ro/i.test(t)
-        ? 'В базе ещё нет поля для румынского названия. Запустите обновлённый supabase-setup.sql в Supabase (SQL Editor).'
+      var e = new Error(/name_ro|description_ro|tags/i.test(t)
+        ? 'В базе ещё нет полей для румынских текстов или тегов. Запустите обновлённый supabase-setup.sql в Supabase (SQL Editor).'
         : /row-level security|42501|Unauthorized/i.test(t)
         ? 'Нет прав на изменение каталога. Проверьте, что в supabase-setup.sql указана ваша почта.'
         : 'Ошибка сервера (' + r.status + '). Попробуйте ещё раз.');
@@ -542,6 +558,19 @@
     });
   }
 
+  // теги: через запятую, без повторов, до 20 штук по 40 символов
+  function parseTags(str) {
+    var seen = {}, out = [];
+    str.split(/[,;\n]/).forEach(function (x) {
+      x = x.trim().replace(/\s+/g, ' ').slice(0, 40);
+      var k = x.toLowerCase();
+      if (!x || seen[k]) return;
+      seen[k] = true;
+      out.push(x);
+    });
+    return out.slice(0, 20);
+  }
+
   function fail(text, el) { say(text, 'err'); if (el && el.focus) el.focus(); }
 
   function setBusy(v) {
@@ -555,6 +584,8 @@
     if (busy) return;
     var name = nameEl.value.trim();
     var nameRo = nameRoEl.value.trim();
+    var descRo = descRoEl.value.trim();
+    var tags = parseTags(tagsEl.value);
     var price = Number(priceEl.value);
     var category = catEl.value;
 
@@ -587,6 +618,8 @@
         description: descEl.value.trim(), images: urls, thumb: publicUrl(id + '/thumb.jpg')
       };
       if (nameRo) row.name_ro = nameRo;
+      if (descRo) row.description_ro = descRo;
+      if (tags.length) row.tags = tags;
       return authed('/rest/v1/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
@@ -610,7 +643,8 @@
     statsEl.textContent = 'Загрузка…';
     var base = 'id,name,price,category,description,images,thumb';
     function get(cols) { return fetch(URL_ + '/rest/v1/products?select=' + cols + '&order=created_at.desc', { headers: headers(null) }); }
-    get(base + ',name_ro')
+    get(base + ',name_ro,description_ro,tags')
+      .then(function (r) { return r.ok ? r : get(base + ',name_ro'); })
       .then(function (r) { return r.ok ? r : get(base); })
       .then(function (r) { if (!r.ok) throw new Error('load'); return r.json(); })
       .then(renderList)
@@ -666,7 +700,7 @@
   /* ---------- окно просмотра товара ---------- */
   var viewModal = $('viewModal'), viewPhoto = $('viewPhoto'), viewThumbs = $('viewThumbs');
   var viewName = $('viewName'), viewNameRo = $('viewNameRo'), viewPrice = $('viewPrice');
-  var viewCat = $('viewCat'), viewDesc = $('viewDesc'), viewClose = $('viewClose');
+  var viewCat = $('viewCat'), viewDesc = $('viewDesc'), viewDescRo = $('viewDescRo'), viewTags = $('viewTags'), viewClose = $('viewClose');
   var viewFocus = null;
 
   function showPhoto(p, i) {
@@ -684,6 +718,11 @@
     viewPrice.textContent = p.price + ' лей';
     viewCat.textContent = p.category || '';
     viewDesc.textContent = p.description || 'Описание не заполнено.';
+    viewDescRo.textContent = p.description_ro ? 'RO: ' + p.description_ro : '';
+    viewDescRo.hidden = !p.description_ro;
+    var hasTags = p.tags && p.tags.length;
+    viewTags.textContent = hasTags ? 'Теги: ' + p.tags.join(', ') : '';
+    viewTags.hidden = !hasTags;
     viewThumbs.textContent = '';
     if (p.images.length > 1) {
       p.images.forEach(function (src, i) {
