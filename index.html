@@ -7,7 +7,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
   /* ===== Общее ===== */
@@ -142,6 +142,97 @@
   aspect-ratio: 564 / 673;                 /* высота блока: верх фото обрезан, шары касаются шапки, как на скриншоте */
   /* без вуали и затемнения; фон скроллится вместе со страницей */
 }
+
+  /* ===== Заголовок и быстрые категории (между шапкой и карточками) ===== */
+  .shop-intro {
+    /* шрифт блока — как на макете; чтобы взять шрифт сайта, замените на "Exo 2" */
+    --intro-font: "Open Sans", "Segoe UI", Arial, sans-serif;
+    --intro-accent: #9d1346;
+    /* светлый ореол: на чистой стене не виден, а на тёмных шарах фона держит текст читаемым */
+    --intro-halo: 0 0 2px #fff, 0 0 6px #fff, 0 0 12px #fff, 0 0 20px rgba(255, 255, 255, .85);
+    padding: clamp(32px, 7.8vw, 64px) 16px 8px;
+    text-align: center;
+    color: #000;
+    font-family: var(--intro-font);
+  }
+  .shop-intro *, .shop-intro *::before, .shop-intro *::after { box-sizing: border-box; }
+
+  .shop-intro__title {
+    margin: 0;
+    font-size: clamp(22px, 4.4vw, 36px);
+    font-weight: 700;
+    line-height: 1.2;
+    text-wrap: balance;
+    text-shadow: var(--intro-halo);
+  }
+
+  .shop-intro__cats {
+    margin-top: clamp(32px, 10.4vw, 88px);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px clamp(24px, 5.9vw, 48px);
+  }
+
+  .shop-intro__cat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 4px 6px;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .shop-intro__icon {
+    width: clamp(56px, 8.8vw, 72px);
+    height: clamp(56px, 8.8vw, 72px);
+    display: block;
+    transition: transform .15s ease;
+  }
+
+  .shop-intro__label {
+    font-size: clamp(14px, 2.2vw, 18px);
+    font-weight: 400;
+    line-height: 1.3;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    text-shadow: var(--intro-halo);
+  }
+
+  .shop-intro__cat:hover .shop-intro__label { color: var(--intro-accent); }
+  .shop-intro__cat:hover .shop-intro__icon { transform: translateY(-2px); }
+  .shop-intro__cat[aria-pressed="true"] .shop-intro__label {
+    color: var(--intro-accent);
+    text-decoration: underline;
+    text-decoration-color: var(--intro-accent);
+  }
+  .shop-intro__cat:focus-visible { outline: 2px solid var(--intro-accent); outline-offset: 3px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shop-intro__icon { transition: none; }
+    .shop-intro__cat:hover .shop-intro__icon { transform: none; }
+  }
+
+  /* Телефоны: кнопки в два ряда по две */
+  @media (max-width: 600px) {
+    .shop-intro__cats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px 12px;
+      max-width: 360px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .shop-intro__label { font-size: 15px; }
+  }
 
   /* ===== Каталог товаров ===== */
   .catalog { padding: 32px 16px 48px; }
@@ -415,7 +506,33 @@
 
 
 
+<!-- Иконки кнопок категорий (SVG-спрайт) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><radialGradient id="ib-pink" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#ff7cc6"/><stop offset=".5" stop-color="#f01a9b"/><stop offset="1" stop-color="#c20e7c"/></radialGradient><radialGradient id="ib-purple" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#d19bf5"/><stop offset=".5" stop-color="#9a4de0"/><stop offset="1" stop-color="#7328bd"/></radialGradient><radialGradient id="ib-orange" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#ffcb5c"/><stop offset=".5" stop-color="#ff9a10"/><stop offset="1" stop-color="#e17600"/></radialGradient><radialGradient id="ib-mint" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#c4f5ec"/><stop offset=".5" stop-color="#86dfcc"/><stop offset="1" stop-color="#52bba9"/></radialGradient><radialGradient id="ib-coral" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#ff9a92"/><stop offset=".5" stop-color="#f4525a"/><stop offset="1" stop-color="#d42f3c"/></radialGradient><radialGradient id="ib-rose" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#ffc0c8"/><stop offset=".5" stop-color="#ff6f84"/><stop offset="1" stop-color="#ee4762"/></radialGradient><radialGradient id="ib-lime" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#d6ea8c"/><stop offset=".5" stop-color="#a5cf52"/><stop offset="1" stop-color="#7fae34"/></radialGradient><radialGradient id="ib-forest" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#6ea467"/><stop offset=".5" stop-color="#4a8449"/><stop offset="1" stop-color="#356b3a"/></radialGradient><radialGradient id="ib-emerald" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#57c793"/><stop offset=".5" stop-color="#1f9a66"/><stop offset="1" stop-color="#0e6c46"/></radialGradient><radialGradient id="ib-sage" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#dcedd2"/><stop offset=".5" stop-color="#bcd9ae"/><stop offset="1" stop-color="#9ec592"/></radialGradient><radialGradient id="ib-red" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#ff6a68"/><stop offset=".5" stop-color="#e3212d"/><stop offset="1" stop-color="#a70f1a"/></radialGradient><linearGradient id="ib-box" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7f3c"/><stop offset="1" stop-color="#ea5a24"/></linearGradient></defs><symbol id="ic-all" viewBox="0 0 72 72"><g transform="translate(36 36) scale(1.13) translate(-34.5 -38.8)"><path d="M26 56c-1 3 2 4 0 7" fill="none" stroke="#8fc9d0" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="M31 54c1 3-2 5 0 8s0 3-1 5" fill="none" stroke="#f2a3b3" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="M37 60c-1 2 1 3 0 5" fill="none" stroke="#f2a3b3" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="M44 49c1 3-1 4 0 6" fill="none" stroke="#f2a3b3" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="M53 40c1 2-1 3 0 5" fill="none" stroke="#f6c37a" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><g transform="translate(52.5 32) rotate(14)"><path d="M0 -8.6C3.7 -8.6 6 -3.9 6 -0.2C6 4.5 2.5 8.3 0 8.6C-2.5 8.3 -6 4.5 -6 -0.2C-6 -3.9 -3.7 -8.6 0 -8.6Z" fill="url(#ib-orange)"/><ellipse cx="-2.5" cy="-4.3" rx="1.2" ry="2.6" transform="rotate(28 -2.5 -4.3)" fill="#fff" opacity=".5"/><path d="M3.7 -5.3Q5.4 -2.6 5.2 0.4" fill="none" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity=".45"/><path d="M-0.8 8.3L0.8 8.3L0.3 9.8L-0.3 9.8Z" fill="#e17600"/></g><g transform="translate(41 22.5) rotate(-8)"><path d="M0 -10.6C5.8 -10.6 9.4 -4.8 9.4 -0.2C9.4 5.5 3.9 10.2 0 10.6C-3.9 10.2 -9.4 5.5 -9.4 -0.2C-9.4 -4.8 -5.8 -10.6 0 -10.6Z" fill="url(#ib-purple)"/><ellipse cx="-3.9" cy="-5.3" rx="1.9" ry="3.2" transform="rotate(28 -3.9 -5.3)" fill="#fff" opacity=".5"/><path d="M5.8 -6.6Q8.5 -3.2 8.1 0.5" fill="none" stroke="#fff" stroke-width="0.8" stroke-linecap="round" opacity=".45"/><path d="M-1.2 10.3L1.2 10.3L0.5 12.1L-0.5 12.1Z" fill="#7328bd"/></g><g transform="translate(28 28) rotate(-4) scale(0.65) translate(-20 -16.5)"><path d="M20 33C10 26 1 19 1 10.5C1 4.5 5.5 .5 11 .5C15 .5 18.3 2.6 20 6.2C21.7 2.6 25 .5 29 .5C34.5 .5 39 4.5 39 10.5C39 19 30 26 20 33Z" fill="url(#ib-coral)"/><ellipse cx="11" cy="9" rx="4.6" ry="3" transform="rotate(-28 11 9)" fill="#fff" opacity=".5"/><path d="M31 5.4Q36.3 7.5 36.5 12" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".4"/></g><g transform="translate(16 41.5) rotate(-6)"><path d="M0 -8.6C4.1 -8.6 6.6 -3.9 6.6 -0.2C6.6 4.5 2.8 8.3 0 8.6C-2.8 8.3 -6.6 4.5 -6.6 -0.2C-6.6 -3.9 -4.1 -8.6 0 -8.6Z" fill="url(#ib-mint)"/><ellipse cx="-2.8" cy="-4.3" rx="1.3" ry="2.6" transform="rotate(28 -2.8 -4.3)" fill="#fff" opacity=".5"/><path d="M4.1 -5.3Q5.9 -2.6 5.7 0.4" fill="none" stroke="#fff" stroke-width="0.6" stroke-linecap="round" opacity=".45"/><path d="M-0.9 8.3L0.9 8.3L0.3 9.8L-0.3 9.8Z" fill="#52bba9"/></g><g transform="translate(44.5 39.5) rotate(10)"><path d="M0 -8.8C4.5 -8.8 7.2 -4 7.2 -0.2C7.2 4.6 3 8.4 0 8.8C-3 8.4 -7.2 4.6 -7.2 -0.2C-7.2 -4 -4.5 -8.8 0 -8.8Z" fill="url(#ib-pink)"/><ellipse cx="-3" cy="-4.4" rx="1.4" ry="2.6" transform="rotate(28 -3 -4.4)" fill="#fff" opacity=".5"/><path d="M4.5 -5.5Q6.5 -2.6 6.2 0.4" fill="none" stroke="#fff" stroke-width="0.6" stroke-linecap="round" opacity=".45"/><path d="M-0.9 8.5L0.9 8.5L0.4 10L-0.4 10Z" fill="#c20e7c"/></g><g transform="translate(33 48) rotate(5) scale(0.55) translate(-20 -16.5)"><path d="M20 33C10 26 1 19 1 10.5C1 4.5 5.5 .5 11 .5C15 .5 18.3 2.6 20 6.2C21.7 2.6 25 .5 29 .5C34.5 .5 39 4.5 39 10.5C39 19 30 26 20 33Z" fill="url(#ib-rose)"/><ellipse cx="11" cy="9" rx="4.6" ry="3" transform="rotate(-28 11 9)" fill="#fff" opacity=".5"/><path d="M31 5.4Q36.3 7.5 36.5 12" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".4"/><path d="M18.2 32.4L21.8 32.4L20.9 35.6L19.1 35.6Z" fill="#ee4762"/></g></g></symbol><symbol id="ic-digits" viewBox="0 0 72 72"><g transform="translate(36 36) scale(1.07) translate(-36.5 -37)"><path d="M20 41c0 3 1 4 1 7" fill="none" stroke="#8fc9d0" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="M34 41c-1 3 1 4 0 7" fill="none" stroke="#f6c37a" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="M45 41c1 3-1 4 0 7" fill="none" stroke="#f2a3b3" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><g transform="translate(53 29.5) rotate(12)"><path d="M0 -8C3.5 -8 5.6 -3.6 5.6 -0.2C5.6 4.2 2.4 7.7 0 8C-2.4 7.7 -5.6 4.2 -5.6 -0.2C-5.6 -3.6 -3.5 -8 0 -8Z" fill="url(#ib-orange)"/><ellipse cx="-2.4" cy="-4" rx="1.1" ry="2.4" transform="rotate(28 -2.4 -4)" fill="#fff" opacity=".5"/><path d="M3.5 -5Q5 -2.4 4.8 0.4" fill="none" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity=".45"/><path d="M-0.7 7.8L0.7 7.8L0.3 9.1L-0.3 9.1Z" fill="#e17600"/></g><g transform="translate(42 19.5) rotate(-6)"><path d="M0 -8.6C5 -8.6 8 -3.9 8 -0.2C8 4.5 3.4 8.3 0 8.6C-3.4 8.3 -8 4.5 -8 -0.2C-8 -3.9 -5 -8.6 0 -8.6Z" fill="url(#ib-purple)"/><ellipse cx="-3.4" cy="-4.3" rx="1.6" ry="2.6" transform="rotate(28 -3.4 -4.3)" fill="#fff" opacity=".5"/><path d="M5 -5.3Q7.2 -2.6 6.9 0.4" fill="none" stroke="#fff" stroke-width="0.7" stroke-linecap="round" opacity=".45"/><path d="M-1 8.3L1 8.3L0.4 9.8L-0.4 9.8Z" fill="#7328bd"/></g><g transform="translate(27.5 27.5) rotate(-4) scale(0.5375) translate(-20 -16.5)"><path d="M20 33C10 26 1 19 1 10.5C1 4.5 5.5 .5 11 .5C15 .5 18.3 2.6 20 6.2C21.7 2.6 25 .5 29 .5C34.5 .5 39 4.5 39 10.5C39 19 30 26 20 33Z" fill="url(#ib-coral)"/><ellipse cx="11" cy="9" rx="4.6" ry="3" transform="rotate(-28 11 9)" fill="#fff" opacity=".5"/><path d="M31 5.4Q36.3 7.5 36.5 12" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".4"/></g><g transform="translate(19.5 35.5) rotate(-6)"><path d="M0 -6.8C3.6 -6.8 5.8 -3.1 5.8 -0.1C5.8 3.5 2.4 6.5 0 6.8C-2.4 6.5 -5.8 3.5 -5.8 -0.1C-5.8 -3.1 -3.6 -6.8 0 -6.8Z" fill="url(#ib-mint)"/><ellipse cx="-2.4" cy="-3.4" rx="1.2" ry="2" transform="rotate(28 -2.4 -3.4)" fill="#fff" opacity=".5"/><path d="M3.6 -4.2Q5.2 -2 5 0.3" fill="none" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity=".45"/><path d="M-0.8 6.6L0.8 6.6L0.3 7.8L-0.3 7.8Z" fill="#52bba9"/></g><g transform="translate(34 36) rotate(-6)"><path d="M0 -7C3.7 -7 6 -3.1 6 -0.1C6 3.6 2.5 6.7 0 7C-2.5 6.7 -6 3.6 -6 -0.1C-6 -3.1 -3.7 -7 0 -7Z" fill="url(#ib-orange)"/><ellipse cx="-2.5" cy="-3.5" rx="1.2" ry="2.1" transform="rotate(28 -2.5 -3.5)" fill="#fff" opacity=".5"/><path d="M3.7 -4.3Q5.4 -2.1 5.2 0.4" fill="none" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity=".45"/><path d="M-0.8 6.8L0.8 6.8L0.3 8L-0.3 8Z" fill="#e17600"/></g><circle cx="31.5" cy="33.5" r=".95" fill="#ffe27a" opacity=".85"/><circle cx="35.5" cy="31.8" r=".95" fill="#ffe27a" opacity=".85"/><circle cx="37" cy="36.5" r=".95" fill="#ffe27a" opacity=".85"/><circle cx="32.5" cy="39" r=".95" fill="#ffe27a" opacity=".85"/><circle cx="34.6" cy="34.8" r=".95" fill="#ffe27a" opacity=".85"/><g transform="translate(45 35.5) rotate(8)"><path d="M0 -7.4C3.6 -7.4 5.8 -3.3 5.8 -0.1C5.8 3.8 2.4 7.1 0 7.4C-2.4 7.1 -5.8 3.8 -5.8 -0.1C-5.8 -3.3 -3.6 -7.4 0 -7.4Z" fill="url(#ib-pink)"/><ellipse cx="-2.4" cy="-3.7" rx="1.2" ry="2.2" transform="rotate(28 -2.4 -3.7)" fill="#fff" opacity=".5"/><path d="M3.6 -4.6Q5.2 -2.2 5 0.4" fill="none" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity=".45"/><path d="M-0.8 7.2L0.8 7.2L0.3 8.4L-0.3 8.4Z" fill="#c20e7c"/></g><ellipse cx="37" cy="62.6" rx="16" ry="1.4" fill="#000" opacity=".09"/><path d="M24.5 46.4L50 46.4L49 50.6L23.5 50.6Z" fill="#b83f17"/><path d="M23.5 50.6L24.6 46.2L17.4 44.6L16.4 48Z" fill="#ff9358"/><path d="M49 50.6L50 46.4L57 44.8L57.8 48.2Z" fill="#f0682c"/><rect x="23.5" y="50.6" width="25.5" height="11.4" rx=".9" fill="url(#ib-box)"/><rect x="23.5" y="50.6" width="25.5" height="1.6" fill="#fff" opacity=".28"/><rect x="45.2" y="50.6" width="3.8" height="11.4" rx=".6" fill="#000" opacity=".08"/></g></symbol><symbol id="ic-text" viewBox="0 0 72 72"><g transform="translate(36 36) scale(1.08) translate(-36 -35.9)"><path d="M36 51.5c2.4 2.4 1.6 5-.4 6.2c-2 1.2-3.6-.6-2.6-2.2c1-1.5 3.6-.6 3.4 1.6c-.2 2.2-1.4 5-1.2 8.2" fill="none" stroke="#f0399f" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/><g transform="translate(36 27) rotate(0)"><path d="M0 -20.6C10.2 -20.6 16.4 -9.3 16.4 -0.4C16.4 10.7 6.9 19.8 0 20.6C-6.9 19.8 -16.4 10.7 -16.4 -0.4C-16.4 -9.3 -10.2 -20.6 0 -20.6Z" fill="url(#ib-pink)"/><ellipse cx="-6.9" cy="-10.3" rx="3.3" ry="6.2" transform="rotate(28 -6.9 -10.3)" fill="#fff" opacity=".5"/><path d="M10.2 -12.8Q14.8 -6.2 14.1 1" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".45"/><path d="M-2.1 20L2.1 20L0.8 23.5L-0.8 23.5Z" fill="#c20e7c"/></g></g></symbol><symbol id="ic-foil" viewBox="0 0 72 72"><g transform="translate(36 36) scale(1.2) translate(-34.6 -32.8)"><path d="M19 46c-1 3 1 4 0 6s-1 3 0 5" fill="none" stroke="#9db4d8" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="M29.5 50.5c1 2-1 3 0 5" fill="none" stroke="#9db4d8" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="M49 47c1 2-1 3 0 5" fill="none" stroke="#9db4d8" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="M39.5 47.5c-1 3 1 4 0 6" fill="none" stroke="#9db4d8" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="M36 41c-1 3 1 4-.2 6s1.6 2.2.6 4c-1 1.8-1 3-.4 8" fill="none" stroke="#ee6b7a" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/><g transform="translate(24 17) rotate(-10)"><path d="M0 -9.2C5 -9.2 8 -4.1 8 -0.2C8 4.8 3.4 8.8 0 9.2C-3.4 8.8 -8 4.8 -8 -0.2C-8 -4.1 -5 -9.2 0 -9.2Z" fill="url(#ib-lime)"/><ellipse cx="-3.4" cy="-4.6" rx="1.6" ry="2.8" transform="rotate(28 -3.4 -4.6)" fill="#fff" opacity=".5"/><path d="M5 -5.7Q7.2 -2.8 6.9 0.5" fill="none" stroke="#fff" stroke-width="0.7" stroke-linecap="round" opacity=".45"/><path d="M-1 8.9L1 8.9L0.4 10.5L-0.4 10.5Z" fill="#7fae34"/></g><g transform="translate(40 16.5) rotate(6)"><path d="M0 -7.4C4.1 -7.4 6.6 -3.3 6.6 -0.1C6.6 3.8 2.8 7.1 0 7.4C-2.8 7.1 -6.6 3.8 -6.6 -0.1C-6.6 -3.3 -4.1 -7.4 0 -7.4Z" fill="url(#ib-emerald)"/><ellipse cx="-2.8" cy="-3.7" rx="1.3" ry="2.2" transform="rotate(28 -2.8 -3.7)" fill="#fff" opacity=".5"/><path d="M4.1 -4.6Q5.9 -2.2 5.7 0.4" fill="none" stroke="#fff" stroke-width="0.6" stroke-linecap="round" opacity=".45"/><path d="M-0.9 7.2L0.9 7.2L0.3 8.4L-0.3 8.4Z" fill="#0e6c46"/></g><g transform="translate(51.5 27) rotate(8)"><path d="M0 -8C3.3 -8 5.4 -3.6 5.4 -0.2C5.4 4.2 2.3 7.7 0 8C-2.3 7.7 -5.4 4.2 -5.4 -0.2C-5.4 -3.6 -3.3 -8 0 -8Z" fill="url(#ib-forest)"/><ellipse cx="-2.3" cy="-4" rx="1.1" ry="2.4" transform="rotate(28 -2.3 -4)" fill="#fff" opacity=".5"/><path d="M3.3 -5Q4.9 -2.4 4.6 0.4" fill="none" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity=".45"/><path d="M-0.7 7.8L0.7 7.8L0.3 9.1L-0.3 9.1Z" fill="#356b3a"/></g><g transform="translate(18.5 35.5) rotate(-4)"><path d="M0 -8.4C4.1 -8.4 6.6 -3.8 6.6 -0.2C6.6 4.4 2.8 8.1 0 8.4C-2.8 8.1 -6.6 4.4 -6.6 -0.2C-6.6 -3.8 -4.1 -8.4 0 -8.4Z" fill="url(#ib-sage)"/><path d="M-0.9 8.1L0.9 8.1L0.3 9.6L-0.3 9.6Z" fill="#8fb883"/></g><g transform="translate(36.5 30) rotate(0) scale(0.675) translate(-20 -16.5)"><path d="M20 33C10 26 1 19 1 10.5C1 4.5 5.5 .5 11 .5C15 .5 18.3 2.6 20 6.2C21.7 2.6 25 .5 29 .5C34.5 .5 39 4.5 39 10.5C39 19 30 26 20 33Z" fill="url(#ib-red)"/><ellipse cx="11" cy="9" rx="4.6" ry="3" transform="rotate(-28 11 9)" fill="#fff" opacity=".5"/><path d="M31 5.4Q36.3 7.5 36.5 12" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".4"/></g><g transform="translate(29 42.5) rotate(-6)"><path d="M0 -8C4 -8 6.4 -3.6 6.4 -0.2C6.4 4.2 2.7 7.7 0 8C-2.7 7.7 -6.4 4.2 -6.4 -0.2C-6.4 -3.6 -4 -8 0 -8Z" fill="url(#ib-emerald)"/><ellipse cx="-2.7" cy="-4" rx="1.3" ry="2.4" transform="rotate(28 -2.7 -4)" fill="#fff" opacity=".5"/><path d="M4 -5Q5.8 -2.4 5.5 0.4" fill="none" stroke="#fff" stroke-width="0.6" stroke-linecap="round" opacity=".45"/><path d="M-0.8 7.8L0.8 7.8L0.3 9.1L-0.3 9.1Z" fill="#0e6c46"/></g><g transform="translate(49 43) rotate(6)"><path d="M0 -8C3.8 -8 6.2 -3.6 6.2 -0.2C6.2 4.2 2.6 7.7 0 8C-2.6 7.7 -6.2 4.2 -6.2 -0.2C-6.2 -3.6 -3.8 -8 0 -8Z" fill="url(#ib-lime)"/><ellipse cx="-2.6" cy="-4" rx="1.2" ry="2.4" transform="rotate(28 -2.6 -4)" fill="#fff" opacity=".5"/><path d="M3.8 -5Q5.6 -2.4 5.3 0.4" fill="none" stroke="#fff" stroke-width="0.6" stroke-linecap="round" opacity=".45"/><path d="M-0.8 7.8L0.8 7.8L0.3 9.1L-0.3 9.1Z" fill="#7fae34"/></g></g></symbol></svg>
+
 <main class="site-bg">
+  <!-- Заголовок и быстрые категории: между шапкой и карточками товаров -->
+  <section class="shop-intro" aria-labelledby="introTitle">
+    <h1 class="shop-intro__title" id="introTitle" data-i18n="intro_title">Наборы шаров в Кишинёве</h1>
+    <div class="shop-intro__cats" role="group" aria-label="Категории товаров" data-i18n-aria="intro_cats_aria">
+      <button type="button" class="shop-intro__cat" data-cat="">
+        <svg class="shop-intro__icon" aria-hidden="true" focusable="false"><use href="#ic-all"/></svg>
+        <span class="shop-intro__label" data-i18n="quick_all">Все товары</span>
+      </button>
+      <button type="button" class="shop-intro__cat" data-cat="Цифры" aria-pressed="false">
+        <svg class="shop-intro__icon" aria-hidden="true" focusable="false"><use href="#ic-digits"/></svg>
+        <span class="shop-intro__label" data-i18n="quick_digits">Цифры</span>
+      </button>
+      <button type="button" class="shop-intro__cat" data-cat="С надписью" aria-pressed="false">
+        <svg class="shop-intro__icon" aria-hidden="true" focusable="false"><use href="#ic-text"/></svg>
+        <span class="shop-intro__label" data-i18n="quick_text">С надписью</span>
+      </button>
+      <button type="button" class="shop-intro__cat" data-cat="Шары фольга" aria-pressed="false">
+        <svg class="shop-intro__icon" aria-hidden="true" focusable="false"><use href="#ic-foil"/></svg>
+        <span class="shop-intro__label" data-i18n="quick_foil">Фольгированные шары</span>
+      </button>
+    </div>
+  </section>
+
   <section class="catalog">
     <div class="catalog__grid" id="catalog"></div>
     <p class="catalog__empty" id="catalogEmpty" data-i18n="empty" hidden>Ничего не найдено</p>
@@ -492,6 +609,8 @@
         search_ph: 'Найти товары и магазины', search_aria: 'Поиск', search_btn: 'Искать',
         contact_title: 'Связаться с нами', empty: 'Ничего не найдено', currency: 'лей',
         lang_aria: 'Сменить язык на румынский', close: 'Закрыть',
+        intro_title: 'Наборы шаров в Кишинёве', intro_cats_aria: 'Категории товаров',
+        quick_all: 'Все товары', quick_digits: 'Цифры', quick_text: 'С надписью', quick_foil: 'Фольгированные шары',
         page_title: 'Exclusive balloons — Наборы шаров в Кишинёве', map_title: 'Карта: Exclusive Balloons'
       },
       ro: {
@@ -500,6 +619,8 @@
         search_ph: 'Caută produse și magazine', search_aria: 'Căutare', search_btn: 'Caută',
         contact_title: 'Contactează-ne', empty: 'Nu s-a găsit nimic', currency: 'lei',
         lang_aria: 'Schimbă limba în rusă', close: 'Închide',
+        intro_title: 'Seturi de baloane în Chișinău', intro_cats_aria: 'Categorii de produse',
+        quick_all: 'Toate produsele', quick_digits: 'Cifre', quick_text: 'Cu mesaj', quick_foil: 'Baloane din folie',
         page_title: 'Exclusive balloons — Seturi de baloane în Chișinău', map_title: 'Harta: Exclusive Balloons'
       }
     };
@@ -573,14 +694,16 @@
       emptyEl.hidden = !((q || activeCat) && shown === 0);
     }
 
-    // категории в меню — фильтр; повторный клик снимает фильтр
-    var catButtons = document.querySelectorAll('.site-header__nav [data-cat]');
+    // категории в меню и кнопки под заголовком — фильтр; повторный клик снимает фильтр;
+    // кнопка «Все товары» (data-cat="") просто сбрасывает фильтр
+    var catButtons = document.querySelectorAll('[data-cat]');
     Array.prototype.forEach.call(catButtons, function (btn) {
       btn.addEventListener('click', function () {
         var c = btn.getAttribute('data-cat');
         activeCat = activeCat === c ? '' : c;
         Array.prototype.forEach.call(catButtons, function (b) {
-          b.setAttribute('aria-pressed', b.getAttribute('data-cat') === activeCat ? 'true' : 'false');
+          var bc = b.getAttribute('data-cat');
+          if (bc) b.setAttribute('aria-pressed', bc === activeCat ? 'true' : 'false');
         });
         filterCatalog();
       });
