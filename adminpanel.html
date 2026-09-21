@@ -113,6 +113,15 @@
     color: var(--err); font: inherit; font-size: 13px; cursor: pointer;
   }
   .item__del:hover { background: var(--err); color: #fff; }
+  .item__actions { display: flex; gap: 8px; }
+  .item__edit {
+    padding: 7px 12px; border: 1px solid var(--accent); border-radius: 8px; background: #fff;
+    color: var(--accent); font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .item__edit:hover { background: var(--accent); color: #fff; }
+  .note--edit { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .note--edit span { overflow-wrap: anywhere; }
+  .preview img { cursor: pointer; }
   .empty { padding: 28px 12px; text-align: center; color: var(--muted); }
 
   /* ===== Планшеты и телефоны ===== */
@@ -127,7 +136,8 @@
     .card { padding: 16px; }
     .item { grid-template-columns: 56px minmax(0, 1fr); }
     .item img { width: 56px; height: 56px; }
-    .item__del { grid-column: 1 / -1; }
+    .item__actions { grid-column: 1 / -1; }
+    .item__actions button { flex: 1; }
   }
 
   [hidden] { display: none !important; }
@@ -228,8 +238,13 @@
 <!-- Панель -->
 <main class="adm" id="appView" hidden>
 
-  <section class="card form-card">
-    <h2>Новый товар</h2>
+  <section class="card form-card" id="formCard">
+    <h2 id="formTitle">Новый товар</h2>
+
+    <div class="note note--edit" id="editNote" hidden>
+      <span id="editNoteText"></span>
+      <button type="button" class="btn btn--ghost btn--small" id="cancelEdit">Отменить</button>
+    </div>
 
     <form id="productForm" novalidate>
       <div class="field">
@@ -284,7 +299,7 @@
         <span class="label">Фото</span>
         <input type="file" id="photos" accept="image/*" multiple hidden>
         <button type="button" class="photo-btn" id="photoBtn">+ Добавить фото</button>
-        <p class="photo-hint">До 5 фото. Первое фото — главное, оно показывается в каталоге.</p>
+        <p class="photo-hint">До 5 фото. Первое фото — главное, оно показывается в каталоге. Нажмите на фото, чтобы сделать его главным.</p>
         <div class="previews" id="previews"></div>
       </div>
 
@@ -343,10 +358,12 @@
   var form = $('productForm'), nameEl = $('name'), nameRoEl = $('nameRo'), priceEl = $('price'), catEl = $('category'), descEl = $('description'), descRoEl = $('descriptionRo'), tagsEl = $('tags');
   var fileEl = $('photos'), photoBtn = $('photoBtn'), previewsEl = $('previews');
   var msgEl = $('formMsg'), submitBtn = $('submitBtn');
+  var formTitle = $('formTitle'), editNote = $('editNote'), editNoteText = $('editNoteText'), cancelEditBtn = $('cancelEdit');
   var listEl = $('list'), statsEl = $('stats');
 
   var photos = [];   // {file, blob, url}
   var busy = false;
+  var editing = null;   // товар, который сейчас редактируется
 
   /* ---------- сообщения ---------- */
   function setMsg(el, text, type) {
@@ -536,11 +553,19 @@
     photos.forEach(function (p, i) {
       var box = document.createElement('div'); box.className = 'preview';
       var img = document.createElement('img'); img.src = p.url; img.alt = '';
+      if (i > 0) {
+        img.title = 'Сделать главным';
+        img.addEventListener('click', function () {
+          if (busy) return;
+          photos.unshift(photos.splice(i, 1)[0]); renderPreviews();
+        });
+      }
       var x = document.createElement('button'); x.type = 'button'; x.className = 'preview__x';
       x.textContent = '×'; x.setAttribute('aria-label', 'Убрать фото');
       x.addEventListener('click', function () {
         if (busy) return;
-        URL.revokeObjectURL(p.url); photos.splice(i, 1); renderPreviews();
+        if (!p.existing) URL.revokeObjectURL(p.url);
+        photos.splice(i, 1); renderPreviews();
       });
       box.appendChild(img); box.appendChild(x);
       if (i === 0) { var m = document.createElement('div'); m.className = 'preview__main'; m.textContent = 'главное'; box.appendChild(m); }
@@ -594,6 +619,8 @@
     if (!category) return fail('Выберите категорию.', catEl);
     if (!photos.length) return fail('Добавьте хотя бы одно фото.', photoBtn);
 
+    if (editing) return saveEdit({ name: name, nameRo: nameRo, descRo: descRo, tags: tags, price: price, category: category });
+
     var id = uuid();
     var jobs = photos.map(function (p, i) { return { path: id + '/' + (i + 1) + '.jpg', blob: p.blob }; });
     var uploaded = [];
@@ -638,6 +665,130 @@
     }).then(function () { setBusy(false); });
   });
 
+  /* ---------- редактирование товара ---------- */
+  function setEditUI(on) {
+    formTitle.textContent = on ? 'Редактирование товара' : 'Новый товар';
+    submitBtn.textContent = on ? 'Сохранить изменения' : 'Добавить товар';
+    editNote.hidden = !on;
+    if (on) editNoteText.textContent = 'Вы редактируете: «' + editing.name + '»';
+  }
+
+  function dropPhotos() {
+    photos.forEach(function (p) { if (!p.existing) URL.revokeObjectURL(p.url); });
+    photos = [];
+  }
+
+  function startEdit(p) {
+    if (busy) return;
+    dropPhotos();
+    editing = p;
+    nameEl.value = p.name || '';
+    nameRoEl.value = p.name_ro || '';
+    priceEl.value = p.price;
+    catEl.value = p.category || '';
+    descEl.value = p.description || '';
+    descRoEl.value = p.description_ro || '';
+    tagsEl.value = (p.tags || []).join(', ');
+    photos = (p.images || []).map(function (u) { return { existing: true, url: u }; });
+    renderPreviews();
+    setEditUI(true);
+    say('');
+    $('formCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function cancelEdit() {
+    if (busy) return;
+    dropPhotos();
+    editing = null;
+    form.reset();
+    renderPreviews();
+    setEditUI(false);
+    say('');
+  }
+  cancelEditBtn.addEventListener('click', cancelEdit);
+
+  // миниатюра из уже загруженного фото (если не получилось — вернёт null)
+  function thumbFromUrl(url) {
+    return fetch(url)
+      .then(function (r) { if (!r.ok) throw new Error('img'); return r.blob(); })
+      .then(function (b) { return resize(b, THUMB_SIDE, 0.75); })
+      .catch(function () { return null; });
+  }
+
+  function saveEdit(v) {
+    var p = editing;
+    var stamp = Date.now().toString(36);
+    var items = photos.slice();
+    var fresh = items.filter(function (it) { return !it.existing; });
+    var uploaded = [];
+    var finalUrls = [];
+    var thumbUrl = null;
+    var patched = false;
+
+    setBusy(true);
+    say('Подготовка…');
+
+    var chain = Promise.resolve();
+    fresh.forEach(function (it, k) {
+      it.path = p.id + '/' + stamp + '-' + (k + 1) + '.jpg';
+      chain = chain.then(function () {
+        say('Загрузка фото ' + (k + 1) + ' из ' + fresh.length + '…');
+        return uploadFile(it.path, it.blob).then(function () { uploaded.push(it.path); });
+      });
+    });
+
+    chain.then(function () {
+      finalUrls = items.map(function (it) { return it.existing ? it.url : publicUrl(it.path); });
+      // новая миниатюра нужна, только если сменилось главное фото
+      if (p.thumb && finalUrls[0] === p.images[0]) return p.thumb;
+      say('Подготовка миниатюры…');
+      var first = items[0];
+      var made = first.existing ? thumbFromUrl(first.url) : resize(first.file, THUMB_SIDE, 0.75);
+      return made.then(function (blob) {
+        if (!blob) return finalUrls[0];
+        var path = p.id + '/thumb-' + stamp + '.jpg';
+        return uploadFile(path, blob).then(function () { uploaded.push(path); return publicUrl(path); });
+      });
+    }).then(function (t) {
+      thumbUrl = t;
+      say('Сохранение изменений…');
+      var patch = {
+        name: v.name, price: Math.round(v.price), category: v.category,
+        description: descEl.value.trim(), images: finalUrls, thumb: thumbUrl
+      };
+      // румынские тексты и теги отправляем, если они заполнены или были заполнены раньше (чтобы можно было очистить)
+      if (v.nameRo || p.name_ro) patch.name_ro = v.nameRo || null;
+      if (v.descRo || p.description_ro) patch.description_ro = v.descRo || null;
+      if (v.tags.length || (p.tags && p.tags.length)) patch.tags = v.tags;
+      return authed('/rest/v1/products?id=eq.' + encodeURIComponent(p.id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
+        body: JSON.stringify(patch)
+      }).then(check).then(function (r) { return r.json(); }).then(function (rows) {
+        if (!rows.length) throw new Error('Не удалось сохранить: нет прав на изменение. Запустите обновлённый supabase-setup.sql в Supabase (SQL Editor).');
+        patched = true;
+      });
+    }).then(function () {
+      // убираем из хранилища фото и миниатюру, которыми товар больше не пользуется
+      var used = {};
+      finalUrls.concat([thumbUrl]).forEach(function (u) { var q = pathFromUrl(u || ''); if (q) used[q] = true; });
+      var old = (p.images || []).concat([p.thumb]).map(function (u) { return u ? pathFromUrl(u) : null; })
+        .filter(function (q) { return q && !used[q]; });
+      return removeFiles(old);
+    }).then(function () {
+      dropPhotos();
+      editing = null;
+      form.reset();
+      renderPreviews();
+      setEditUI(false);
+      say('Изменения в товаре «' + v.name + '» сохранены.', 'ok');
+      loadList();
+    }).catch(function (err) {
+      if (!patched) removeFiles(uploaded);
+      handleError(err, function (t) { say(t, 'err'); });
+    }).then(function () { setBusy(false); });
+  }
+
   /* ---------- список ---------- */
   function loadList() {
     statsEl.textContent = 'Загрузка…';
@@ -667,15 +818,19 @@
       var pr = document.createElement('span'); pr.className = 'item__price'; pr.textContent = p.price + ' лей';
       m.appendChild(pr); m.appendChild(document.createTextNode(' · ' + p.category + ' · фото: ' + p.images.length));
       info.appendChild(n); info.appendChild(m);
+      var actions = document.createElement('div'); actions.className = 'item__actions';
+      var edit = document.createElement('button'); edit.type = 'button'; edit.className = 'item__edit'; edit.textContent = 'Редактировать';
+      edit.addEventListener('click', function (e) { e.stopPropagation(); startEdit(p); });
       var del = document.createElement('button'); del.type = 'button'; del.className = 'item__del'; del.textContent = 'Удалить';
       del.addEventListener('click', function (e) { e.stopPropagation(); removeProduct(p, del); });
+      actions.appendChild(edit); actions.appendChild(del);
       row.tabIndex = 0;
       row.setAttribute('role', 'button');
       row.addEventListener('click', function () { openView(p); });
       row.addEventListener('keydown', function (e) {
         if (e.target === row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openView(p); }
       });
-      row.appendChild(img); row.appendChild(info); row.appendChild(del);
+      row.appendChild(img); row.appendChild(info); row.appendChild(actions);
       listEl.appendChild(row);
     });
     statsEl.textContent = 'Товаров: ' + products.length;
@@ -690,6 +845,7 @@
     }).then(check).then(function (r) { return r.json(); }).then(function (rows) {
       if (!rows.length) throw new Error('Не удалось удалить товар: нет прав или он уже удалён.');
       var paths = (p.images || []).map(pathFromUrl).concat([p.thumb ? pathFromUrl(p.thumb) : null]);
+      if (editing && editing.id === p.id) cancelEdit();
       return removeFiles(paths);
     }).then(loadList).catch(function (err) {
       btn.disabled = false;
