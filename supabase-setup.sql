@@ -6,7 +6,7 @@
 --    (ту же самую вы создадите в Authentication → Users).
 create or replace function public.is_shop_admin() returns boolean
 language sql stable as $$
-  select lower(coalesce(auth.jwt() ->> 'email', '')) = lower('ВАША_ПОЧТА@example.com')
+  select lower(coalesce(auth.jwt() ->> 'email', '')) = lower('hdhrhdfjrkndbdhr@gmail.com')
 $$;
 
 -- 2) Таблица товаров
@@ -20,6 +20,9 @@ create table if not exists public.products (
   thumb text,
   created_at timestamptz not null default now()
 );
+
+-- Румынское название товара (если таблица уже была создана раньше — эта строка её дополнит)
+alter table public.products add column if not exists name_ro text;
 
 alter table public.products enable row level security;
 
