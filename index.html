@@ -113,8 +113,14 @@
     scrollbar-width: none;
   }
   .site-header__nav::-webkit-scrollbar { display: none; }
-  .site-header__nav a { color: #1a1a1a; font-size: 12.5px; text-decoration: none; flex: none; }
-  .site-header__nav a:hover { color: #9d1346; }
+  .site-header__nav button {
+    flex: none; padding: 0; border: 0; background: none; cursor: pointer;
+    color: #1a1a1a; font: 400 12.5px "Exo 2", "Segoe UI", Arial, sans-serif;
+    text-decoration: underline transparent; text-decoration-thickness: 2px; text-underline-offset: 3px;
+  }
+  .site-header__nav button:hover { color: #9d1346; }
+  .site-header__nav button[aria-pressed="true"] { color: #9d1346; text-decoration-color: #9d1346; }
+  .site-header__nav button:focus-visible { outline: 2px solid #9d1346; outline-offset: 3px; border-radius: 2px; }
 
   /* Телефоны: логотип и язык в первой строке, поиск — под ними */
   @media (max-width: 720px) {
@@ -397,13 +403,13 @@
   </div>
 
   <nav class="site-header__nav">
-    <a href="#" data-i18n="nav_foil">Шары фольга</a>
-    <a href="#" data-i18n="nav_digits">Цифры</a>
-    <a href="#" data-i18n="nav_figures">Фигуры</a>
-    <a href="#" data-i18n="nav_text">С надписью</a>
-    <a href="#" data-i18n="nav_latex">Шары латексные</a>
-    <a href="#" data-i18n="nav_party">Артикулы для праздника</a>
-    <a href="#" data-i18n="nav_comp">Композиции</a>
+    <button type="button" data-cat="Шары фольга" aria-pressed="false" data-i18n="nav_foil">Шары фольга</button>
+    <button type="button" data-cat="Цифры" aria-pressed="false" data-i18n="nav_digits">Цифры</button>
+    <button type="button" data-cat="Фигуры" aria-pressed="false" data-i18n="nav_figures">Фигуры</button>
+    <button type="button" data-cat="С надписью" aria-pressed="false" data-i18n="nav_text">С надписью</button>
+    <button type="button" data-cat="Шары латексные" aria-pressed="false" data-i18n="nav_latex">Шары латексные</button>
+    <button type="button" data-cat="Артикулы для праздника" aria-pressed="false" data-i18n="nav_party">Артикулы для праздника</button>
+    <button type="button" data-cat="Композиции" aria-pressed="false" data-i18n="nav_comp">Композиции</button>
   </nav>
 </header>
 
@@ -513,9 +519,12 @@
     var langCode = document.getElementById('langCode');
     var items = [];   // карточки каталога: {el, p, nameEl, priceEl, key}
     var current = null;   // товар, открытый в окне
+    var activeCat = '';   // выбранная категория (фильтр из меню)
 
     // название на выбранном языке (румынское, если оно заполнено)
     function displayName(p) { return lang === 'ro' && p.name_ro ? p.name_ro : p.name; }
+    // описание на выбранном языке (румынское, если заполнено)
+    function displayDesc(p) { return lang === 'ro' && p.description_ro ? p.description_ro : (p.description || ''); }
 
     function applyLang() {
       document.documentElement.lang = lang;
@@ -557,12 +566,25 @@
       var q = norm(searchInput.value);
       var shown = 0;
       items.forEach(function (it) {
-        var ok = !q || it.key.indexOf(q) !== -1;
+        var ok = (!q || it.key.indexOf(q) !== -1) && (!activeCat || it.p.category === activeCat);
         it.el.hidden = !ok;
         if (ok) shown++;
       });
-      emptyEl.hidden = !(q && shown === 0);
+      emptyEl.hidden = !((q || activeCat) && shown === 0);
     }
+
+    // категории в меню — фильтр; повторный клик снимает фильтр
+    var catButtons = document.querySelectorAll('.site-header__nav [data-cat]');
+    Array.prototype.forEach.call(catButtons, function (btn) {
+      btn.addEventListener('click', function () {
+        var c = btn.getAttribute('data-cat');
+        activeCat = activeCat === c ? '' : c;
+        Array.prototype.forEach.call(catButtons, function (b) {
+          b.setAttribute('aria-pressed', b.getAttribute('data-cat') === activeCat ? 'true' : 'false');
+        });
+        filterCatalog();
+      });
+    });
 
     searchInput.addEventListener('input', filterCatalog);
     searchForm.addEventListener('submit', function (e) {
@@ -595,8 +617,9 @@
       if (!current) return;
       mName.textContent = displayName(current);
       mPrice.textContent = current.price + ' ' + t('currency');
-      mDesc.textContent = current.description || '';
-      mDesc.hidden = !current.description;
+      var d = displayDesc(current);
+      mDesc.textContent = d;
+      mDesc.hidden = !d;
       mPhoto.alt = displayName(current);
     }
 
@@ -644,12 +667,13 @@
     var headers = { apikey: key };
     if (key.indexOf('eyJ') === 0) headers.Authorization = 'Bearer ' + key;
 
-    var base = 'id,name,price,thumb,images,description';
+    var base = 'id,name,price,category,thumb,images,description';
     function load(cols) {
       return fetch(url + '/rest/v1/products?select=' + cols + '&order=created_at.desc', { headers: headers });
     }
-    // если в базе ещё нет колонки name_ro, запрашиваем без неё
-    load(base + ',name_ro')
+    // если в базе ещё нет новых колонок, запрашиваем без них
+    load(base + ',name_ro,description_ro,tags')
+      .then(function (r) { return r.ok ? r : load(base + ',name_ro'); })
       .then(function (r) { return r.ok ? r : load(base); })
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (list) {
@@ -689,7 +713,7 @@
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(p); }
           });
 
-          items.push({ el: card, p: p, nameEl: name, priceEl: price, key: norm((p.name || '') + ' ' + (p.name_ro || '')) });
+          items.push({ el: card, p: p, nameEl: name, priceEl: price, key: norm((p.name || '') + ' ' + (p.name_ro || '') + ' ' + (p.tags || []).join(' ')) });
         });
         filterCatalog();
       })
