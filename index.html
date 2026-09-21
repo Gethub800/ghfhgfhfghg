@@ -20,13 +20,13 @@
   .site-header__top {
     position: relative;
     z-index: 1;
-    height: 62px;
+    height: 72px;
     background: linear-gradient(90deg, #f6f4f5 40%, #f2f0f1 100%);
     box-shadow: 0 1px 6px rgba(0, 0, 0, .14);
   }
 
   .site-header__inner {
-    width: min(967px, 100%);
+    width: min(1040px, 100%);
     height: 100%;
     margin: 0 auto;
     display: grid;
@@ -42,24 +42,24 @@
     color: #9d1346;
     text-decoration: none;
   }
-  .site-header__logo { height: 52px; width: auto; align-self: flex-start; margin-top: 3px; display: block; }
-  .site-header__name { font-size: 22px; font-weight: 500; line-height: 1; white-space: nowrap; }
+  .site-header__logo { height: 60px; width: auto; align-self: flex-start; margin-top: 4px; display: block; }
+  .site-header__name { font-size: 25px; font-weight: 500; line-height: 1; white-space: nowrap; }
 
   .site-header__search {
     position: relative;
-    width: 238px;
-    height: 29px;
+    width: 272px;
+    height: 34px;
     margin: 0;
   }
   .site-header__search input {
     width: 100%;
     height: 100%;
-    padding: 0 34px 0 11px;
+    padding: 0 40px 0 14px;
     border: 1px solid #b9b9b9;
-    border-radius: 15px;
+    border-radius: 17px;
     background: #fff;
     color: #1a1a1a;
-    font: 400 12px "Exo 2", "Segoe UI", Arial, sans-serif;
+    font: 400 13px "Exo 2", "Segoe UI", Arial, sans-serif;
     outline: none;
   }
   .site-header__search input::placeholder { color: #8a8a8a; }
@@ -68,7 +68,7 @@
     position: absolute;
     top: 0;
     right: 6px;
-    width: 28px;
+    width: 32px;
     height: 100%;
     padding: 0;
     border: 0;
@@ -79,34 +79,41 @@
     align-items: center;
     justify-content: center;
   }
-  .site-header__search svg { width: 16px; height: 16px; }
+  .site-header__search svg { width: 18px; height: 18px; }
 
+  /* Кнопка языка — один объект: значок и код внутри одной кнопки */
   .site-header__lang {
     justify-self: end;
-    padding-right: clamp(0px, 4.7vw, 64px);
+    margin-right: clamp(0px, 4.7vw, 64px);
     display: flex;
     align-items: center;
-    gap: 17px;
-    font-size: 12px;
-    font-weight: 600;
+    gap: 9px;
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 18px;
+    background: transparent;
     color: #1a1a1a;
+    font: 600 14px "Exo 2", "Segoe UI", Arial, sans-serif;
+    cursor: pointer;
   }
-  .site-header__lang svg { width: 16px; height: 16px; display: block; }
+  .site-header__lang:hover { background: rgba(0, 0, 0, .06); }
+  .site-header__lang:focus-visible { outline: 2px solid #9d1346; outline-offset: 2px; }
+  .site-header__lang svg { width: 19px; height: 19px; display: block; }
 
   .site-header__nav {
     background: #fff;
-    height: 22px;
-    padding-right: 26px;
+    height: 28px;
+    padding-right: 30px;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 19px;
+    gap: 22px;
     overflow-x: auto;
     white-space: nowrap;
     scrollbar-width: none;
   }
   .site-header__nav::-webkit-scrollbar { display: none; }
-  .site-header__nav a { color: #1a1a1a; font-size: 11px; text-decoration: none; flex: none; }
+  .site-header__nav a { color: #1a1a1a; font-size: 12.5px; text-decoration: none; flex: none; }
   .site-header__nav a:hover { color: #9d1346; }
 
   /* Телефоны: логотип и язык в первой строке, поиск — под ними */
@@ -114,8 +121,8 @@
     .site-header__top { height: auto; padding: 8px 12px; }
     .site-header__inner { grid-template-columns: minmax(0, 1fr) auto; row-gap: 8px; }
     .site-header__search { grid-row: 2; grid-column: 1 / -1; width: 100%; }
-    .site-header__lang { padding-right: 0; }
-    .site-header__name { font-size: 19px; }
+    .site-header__lang { margin-right: 0; }
+    .site-header__name { font-size: 21px; }
     .site-header__nav { justify-content: flex-start; padding: 0 12px; }
   }
 
@@ -146,6 +153,53 @@
     display: flex;
     flex-direction: column;
   }
+  .catalog__card[hidden] { display: none; }
+  .catalog__card { cursor: pointer; }
+  .catalog__card:focus-visible { outline: 3px solid #9d1346; outline-offset: 2px; }
+
+  /* ===== Окно товара ===== */
+  .modal {
+    position: fixed; inset: 0; z-index: 100; padding: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, .55);
+    font-family: "Exo 2", "Segoe UI", Arial, sans-serif;
+  }
+  .modal[hidden] { display: none; }
+  .modal__box {
+    position: relative; width: min(720px, 100%); max-height: 92vh; overflow: auto;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px;
+    padding: 20px; border-radius: 14px; background: #fff; color: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+  }
+  .modal__close {
+    position: absolute; top: 8px; right: 8px; z-index: 1; width: 34px; height: 34px; padding: 0;
+    border: 0; border-radius: 50%; background: rgba(0, 0, 0, .08); color: #1a1a1a;
+    font-size: 22px; line-height: 34px; cursor: pointer;
+  }
+  .modal__close:hover { background: rgba(0, 0, 0, .16); }
+  .modal__photo { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; border-radius: 10px; background: #eee; }
+  .modal__thumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .modal__thumbs button {
+    width: 48px; height: 48px; padding: 0; border: 2px solid transparent; border-radius: 6px;
+    overflow: hidden; background: none; cursor: pointer;
+  }
+  .modal__thumbs button[aria-current="true"] { border-color: #9d1346; }
+  .modal__thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .modal__info { min-width: 0; padding-right: 26px; }
+  .modal__name { margin: 0 0 8px; font-size: 20px; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+  .modal__price { margin-bottom: 12px; font-size: 22px; font-weight: 600; color: #9d1346; }
+  .modal__desc { margin: 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .modal__desc[hidden] { display: none; }
+  @media (max-width: 640px) {
+    .modal__box { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 16px; }
+    .modal__info { padding-right: 0; }
+  }
+  .catalog__empty {
+    max-width: 320px; margin: 0 auto; padding: 12px 16px; border-radius: 10px;
+    background: rgba(255, 255, 255, .92); box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+    text-align: center; font-size: 14px; color: #1a1a1a;
+  }
+  .catalog__empty[hidden] { display: none; }
   .catalog__photo { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; background: #eee; }
   .catalog__body { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 6px; }
   .catalog__name {
@@ -328,28 +382,28 @@
         <span class="site-header__name">Exclusive balloons</span>
       </a>
 
-      <form class="site-header__search" role="search" onsubmit="return false">
-        <input type="search" placeholder="Найти товары и магазины" aria-label="Поиск">
-        <button type="submit" aria-label="Искать">
+      <form class="site-header__search" id="searchForm" role="search">
+        <input type="search" id="searchInput" autocomplete="off" placeholder="Найти товары и магазины" aria-label="Поиск" data-i18n-placeholder="search_ph" data-i18n-aria="search_aria">
+        <button type="submit" aria-label="Искать" data-i18n-aria="search_btn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
         </button>
       </form>
 
-      <div class="site-header__lang">
+      <button type="button" class="site-header__lang" id="langBtn" aria-label="Сменить язык на румынский">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><ellipse cx="12" cy="12" rx="4" ry="9.5"/><path d="M2.5 12h19M4 7h16M4 17h16"/></svg>
-        <span>RU</span>
-      </div>
+        <span id="langCode">RU</span>
+      </button>
     </div>
   </div>
 
   <nav class="site-header__nav">
-    <a href="#">Шары фольга</a>
-    <a href="#">Цифры</a>
-    <a href="#">Фигуры</a>
-    <a href="#">С надписью</a>
-    <a href="#">Шары латексные</a>
-    <a href="#">Артикулы для праздника</a>
-    <a href="#">Композиции</a>
+    <a href="#" data-i18n="nav_foil">Шары фольга</a>
+    <a href="#" data-i18n="nav_digits">Цифры</a>
+    <a href="#" data-i18n="nav_figures">Фигуры</a>
+    <a href="#" data-i18n="nav_text">С надписью</a>
+    <a href="#" data-i18n="nav_latex">Шары латексные</a>
+    <a href="#" data-i18n="nav_party">Артикулы для праздника</a>
+    <a href="#" data-i18n="nav_comp">Композиции</a>
   </nav>
 </header>
 
@@ -358,6 +412,7 @@
 <main class="site-bg">
   <section class="catalog">
     <div class="catalog__grid" id="catalog"></div>
+    <p class="catalog__empty" id="catalogEmpty" data-i18n="empty" hidden>Ничего не найдено</p>
   </section>
 </main>
 
@@ -366,7 +421,7 @@
 
     <!-- Контакты -->
     <div class="site-footer__contacts">
-      <h2 class="site-footer__title">Связаться с нами</h2>
+      <h2 class="site-footer__title" data-i18n="contact_title">Связаться с нами</h2>
 
       <ul class="site-footer__list">
         <li class="site-footer__item">
@@ -396,18 +451,192 @@
 
     <!-- Карта -->
     <div class="site-footer__map">
-      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d285.90392026820746!2d28.852276751489466!3d47.02076578640896!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40c97b6d805c6741%3A0xb0a1b3ea75c2dbf7!2sExclusive%20Balloons!5e0!3m2!1sru!2s!4v1787488489282!5m2!1sru!2s" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" title="Карта: Exclusive Balloons"></iframe>
+      <iframe src="https://www.google.com/maps?q=Alexandru+Hajdeu+27,+Chisinau,+Moldova&amp;hl=ru&amp;z=16&amp;output=embed" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" title="Карта: Exclusive Balloons"></iframe>
     </div>
 
   </div>
 </footer>
 
 
-<!-- Каталог: товары берутся из базы, куда их добавляет панель администратора -->
+<!-- Окно товара -->
+<div class="modal" id="productModal" hidden>
+  <div class="modal__box" role="dialog" aria-modal="true" aria-labelledby="modalName">
+    <button type="button" class="modal__close" id="modalClose" aria-label="Закрыть" data-i18n-aria="close">×</button>
+    <div class="modal__gallery">
+      <img class="modal__photo" id="modalPhoto" alt="">
+      <div class="modal__thumbs" id="modalThumbs"></div>
+    </div>
+    <div class="modal__info">
+      <h3 class="modal__name" id="modalName"></h3>
+      <div class="modal__price" id="modalPrice"></div>
+      <p class="modal__desc" id="modalDesc"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Язык, поиск и каталог: товары берутся из базы, куда их добавляет панель администратора -->
 <script src="site-config.js"></script>
 <script>
   (function () {
+    /* ---------- переводы ---------- */
+    var I18N = {
+      ru: {
+        nav_foil: 'Шары фольга', nav_digits: 'Цифры', nav_figures: 'Фигуры', nav_text: 'С надписью',
+        nav_latex: 'Шары латексные', nav_party: 'Артикулы для праздника', nav_comp: 'Композиции',
+        search_ph: 'Найти товары и магазины', search_aria: 'Поиск', search_btn: 'Искать',
+        contact_title: 'Связаться с нами', empty: 'Ничего не найдено', currency: 'лей',
+        lang_aria: 'Сменить язык на румынский', close: 'Закрыть',
+        page_title: 'Exclusive balloons — Наборы шаров в Кишинёве', map_title: 'Карта: Exclusive Balloons'
+      },
+      ro: {
+        nav_foil: 'Baloane folie', nav_digits: 'Cifre', nav_figures: 'Figuri', nav_text: 'Cu mesaj',
+        nav_latex: 'Baloane din latex', nav_party: 'Articole pentru petreceri', nav_comp: 'Compoziții',
+        search_ph: 'Caută produse și magazine', search_aria: 'Căutare', search_btn: 'Caută',
+        contact_title: 'Contactează-ne', empty: 'Nu s-a găsit nimic', currency: 'lei',
+        lang_aria: 'Schimbă limba în rusă', close: 'Închide',
+        page_title: 'Exclusive balloons — Seturi de baloane în Chișinău', map_title: 'Harta: Exclusive Balloons'
+      }
+    };
+
+    var lang = 'ru';
+    try {
+      var saved = localStorage.getItem('lang');
+      if (saved === 'ru' || saved === 'ro') lang = saved;
+    } catch (e) {}
+    function t(key) { return I18N[lang][key]; }
+
     var grid = document.getElementById('catalog');
+    var emptyEl = document.getElementById('catalogEmpty');
+    var searchForm = document.getElementById('searchForm');
+    var searchInput = document.getElementById('searchInput');
+    var langBtn = document.getElementById('langBtn');
+    var langCode = document.getElementById('langCode');
+    var items = [];   // карточки каталога: {el, p, nameEl, priceEl, key}
+    var current = null;   // товар, открытый в окне
+
+    // название на выбранном языке (румынское, если оно заполнено)
+    function displayName(p) { return lang === 'ro' && p.name_ro ? p.name_ro : p.name; }
+
+    function applyLang() {
+      document.documentElement.lang = lang;
+      document.title = t('page_title');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function (el) {
+        el.textContent = t(el.getAttribute('data-i18n'));
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-placeholder]'), function (el) {
+        el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-aria]'), function (el) {
+        el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria')));
+      });
+      var map = document.querySelector('.site-footer__map iframe');
+      if (map) map.title = t('map_title');
+      langCode.textContent = lang.toUpperCase();
+      langBtn.setAttribute('aria-label', t('lang_aria'));
+      items.forEach(function (it) {
+        it.priceEl.textContent = it.p.price + ' ' + t('currency');
+        it.nameEl.textContent = displayName(it.p);
+        it.el.querySelector('img').alt = displayName(it.p);
+      });
+      renderModal();
+    }
+
+    langBtn.addEventListener('click', function () {
+      lang = lang === 'ru' ? 'ro' : 'ru';
+      try { localStorage.setItem('lang', lang); } catch (e) {}
+      applyLang();
+    });
+
+    /* ---------- поиск по названию ---------- */
+    function norm(str) {
+      return String(str || '').toLowerCase().replace(/ё/g, 'е')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    }
+
+    function filterCatalog() {
+      var q = norm(searchInput.value);
+      var shown = 0;
+      items.forEach(function (it) {
+        var ok = !q || it.key.indexOf(q) !== -1;
+        it.el.hidden = !ok;
+        if (ok) shown++;
+      });
+      emptyEl.hidden = !(q && shown === 0);
+    }
+
+    searchInput.addEventListener('input', filterCatalog);
+    searchForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      filterCatalog();
+      searchInput.blur();
+    });
+
+    /* ---------- окно товара ---------- */
+    var modal = document.getElementById('productModal');
+    var mPhoto = document.getElementById('modalPhoto');
+    var mThumbs = document.getElementById('modalThumbs');
+    var mName = document.getElementById('modalName');
+    var mPrice = document.getElementById('modalPrice');
+    var mDesc = document.getElementById('modalDesc');
+    var mClose = document.getElementById('modalClose');
+    var photoIndex = 0;
+    var lastFocus = null;
+
+    function showPhoto(i) {
+      photoIndex = i;
+      mPhoto.src = current.images[i];
+      mPhoto.alt = displayName(current);
+      Array.prototype.forEach.call(mThumbs.children, function (b, k) {
+        b.setAttribute('aria-current', k === i ? 'true' : 'false');
+      });
+    }
+
+    function renderModal() {
+      if (!current) return;
+      mName.textContent = displayName(current);
+      mPrice.textContent = current.price + ' ' + t('currency');
+      mDesc.textContent = current.description || '';
+      mDesc.hidden = !current.description;
+      mPhoto.alt = displayName(current);
+    }
+
+    function openModal(p) {
+      current = p;
+      mThumbs.textContent = '';
+      if (p.images.length > 1) {
+        p.images.forEach(function (src, i) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          var im = document.createElement('img');
+          im.src = src; im.alt = '';
+          b.appendChild(im);
+          b.addEventListener('click', function () { showPhoto(i); });
+          mThumbs.appendChild(b);
+        });
+      }
+      renderModal();
+      showPhoto(0);
+      lastFocus = document.activeElement;
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      mClose.focus();
+    }
+
+    function closeModal() {
+      if (modal.hidden) return;
+      modal.hidden = true;
+      current = null;
+      document.body.style.overflow = '';
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+
+    mClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+    applyLang();
+
+    /* ---------- каталог из базы ---------- */
     var url = (typeof SUPABASE_URL !== 'undefined' ? String(SUPABASE_URL) : '').replace(/\/$/, '');
     var key = typeof SUPABASE_KEY !== 'undefined' ? String(SUPABASE_KEY) : '';
     if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url) || key.length < 40) return;
@@ -415,7 +644,13 @@
     var headers = { apikey: key };
     if (key.indexOf('eyJ') === 0) headers.Authorization = 'Bearer ' + key;
 
-    fetch(url + '/rest/v1/products?select=id,name,price,thumb,images&order=created_at.desc', { headers: headers })
+    var base = 'id,name,price,thumb,images,description';
+    function load(cols) {
+      return fetch(url + '/rest/v1/products?select=' + cols + '&order=created_at.desc', { headers: headers });
+    }
+    // если в базе ещё нет колонки name_ro, запрашиваем без неё
+    load(base + ',name_ro')
+      .then(function (r) { return r.ok ? r : load(base); })
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (list) {
         list.forEach(function (p) {
@@ -427,7 +662,7 @@
           var img = document.createElement('img');
           img.className = 'catalog__photo';
           img.src = p.thumb || p.images[0];
-          img.alt = p.name || '';
+          img.alt = displayName(p) || '';
           img.loading = 'lazy';
 
           var body = document.createElement('div');
@@ -435,18 +670,28 @@
 
           var name = document.createElement('div');
           name.className = 'catalog__name';
-          name.textContent = p.name || '';
+          name.textContent = displayName(p) || '';
 
           var price = document.createElement('div');
           price.className = 'catalog__price';
-          price.textContent = p.price + ' лей';
+          price.textContent = p.price + ' ' + t('currency');
 
           body.appendChild(name);
           body.appendChild(price);
           card.appendChild(img);
           card.appendChild(body);
           grid.appendChild(card);
+
+          card.tabIndex = 0;
+          card.setAttribute('role', 'button');
+          card.addEventListener('click', function () { openModal(p); });
+          card.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(p); }
+          });
+
+          items.push({ el: card, p: p, nameEl: name, priceEl: price, key: norm((p.name || '') + ' ' + (p.name_ro || '')) });
         });
+        filterCatalog();
       })
       .catch(function () {});
   })();
