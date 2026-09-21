@@ -36,6 +36,10 @@ drop policy if exists "products: admin insert" on public.products;
 create policy "products: admin insert" on public.products
   for insert to authenticated with check (public.is_shop_admin());
 
+drop policy if exists "products: admin update" on public.products;
+create policy "products: admin update" on public.products
+  for update to authenticated using (public.is_shop_admin()) with check (public.is_shop_admin());
+
 drop policy if exists "products: admin delete" on public.products;
 create policy "products: admin delete" on public.products
   for delete to authenticated using (public.is_shop_admin());
