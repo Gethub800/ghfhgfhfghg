@@ -45,7 +45,9 @@
   }
   .card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, .1); padding: 20px; }
   .card h2 { margin: 0 0 16px; font-size: 18px; font-weight: 600; }
-  .form-card { position: sticky; top: 16px; }
+  /* раньше форма была «липкой» при прокрутке, но с категориями и румынскими
+     полями она стала выше списка и могла наезжать на блок категорий ниже */
+  .form-card { position: static; }
 
   /* ===== Форма ===== */
   .field { margin-bottom: 14px; }
@@ -123,6 +125,30 @@
   .note--edit span { overflow-wrap: anywhere; }
   .preview img { cursor: pointer; }
   .empty { padding: 28px 12px; text-align: center; color: var(--muted); }
+
+  /* ===== Категории наборов шаров (плитки на главной странице) ===== */
+  .cat-card { grid-column: 1 / -1; margin-top: 4px; }
+  .cat-form { display: grid; grid-template-columns: 64px 1fr 1fr auto; gap: 10px; align-items: end; margin-bottom: 16px; }
+  .cat-form .field { margin-bottom: 0; }
+  .cat-form input[type="text"] { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+  .cat-icon-input { text-align: center; font-size: 18px; padding: 9px 4px !important; }
+  .cat-list { display: grid; gap: 8px; }
+  .cat-row {
+    display: flex; align-items: center; gap: 12px; padding: 8px 10px;
+    border: 1px solid #eee; border-radius: 8px;
+  }
+  .cat-row__icon { font-size: 22px; width: 30px; text-align: center; flex: none; }
+  .cat-row__name { font-weight: 600; }
+  .cat-row__nameRo { font-size: 12px; color: var(--muted); }
+  .cat-row__del {
+    margin-left: auto; padding: 6px 12px; border: 1px solid var(--err); border-radius: 8px;
+    background: #fff; color: var(--err); font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .cat-row__del:hover { background: var(--err); color: #fff; }
+  @media (max-width: 560px) {
+    .cat-form { grid-template-columns: 56px 1fr; }
+    .cat-form .btn { grid-column: 1 / -1; }
+  }
 
   /* ===== Планшеты и телефоны ===== */
   @media (max-width: 820px) {
@@ -265,16 +291,7 @@
         </div>
         <div>
           <label for="category">Категория</label>
-          <select id="category">
-            <option value="">Выберите…</option>
-            <option>Шары фольга</option>
-            <option>Цифры</option>
-            <option>Фигуры</option>
-            <option>С надписью</option>
-            <option>Шары латексные</option>
-            <option>Артикулы для праздника</option>
-            <option>Композиции</option>
-          </select>
+<select id="category" data-preset="Шары фольга,Цифры,Фигуры,С надписью,Шары латексные,Артикулы для праздника,Композиции"></select>
         </div>
       </div>
 
@@ -314,6 +331,30 @@
     </div>
     <p class="stats" id="stats"></p>
     <div class="list" id="list"></div>
+  </section>
+
+  <section class="card list-card cat-card">
+    <h2>Категории наборов шаров</h2>
+    <p class="photo-hint" style="margin:0 0 14px;">Показываются плитками на главной странице под заголовком «Наборы шаров в Кишинёве», рядом с плиткой «Все товары».</p>
+
+    <form class="cat-form" id="catForm" novalidate>
+      <div class="field">
+        <label for="catIcon">Значок</label>
+        <input type="text" id="catIcon" class="cat-icon-input" maxlength="4" placeholder="🎈">
+      </div>
+      <div class="field">
+        <label for="catName">Название</label>
+        <input type="text" id="catName" maxlength="60" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="catNameRo">Название на румынском</label>
+        <input type="text" id="catNameRo" maxlength="60" autocomplete="off">
+      </div>
+      <button type="submit" class="btn" id="catSubmitBtn">Добавить</button>
+    </form>
+
+    <div class="msg" id="catMsg" role="status" aria-live="polite"></div>
+    <div class="cat-list" id="catList"></div>
   </section>
 
 </main>
@@ -360,9 +401,33 @@
   var msgEl = $('formMsg'), submitBtn = $('submitBtn');
   var formTitle = $('formTitle'), editNote = $('editNote'), editNoteText = $('editNoteText'), cancelEditBtn = $('cancelEdit');
   var listEl = $('list'), statsEl = $('stats');
+  var catForm = $('catForm'), catIconEl = $('catIcon'), catNameEl = $('catName'), catNameRoEl = $('catNameRo');
+  var catMsgEl = $('catMsg'), catSubmitBtn = $('catSubmitBtn'), catListEl = $('catList');
+  var customCategories = [];   // категории, которые добавил админ (из таблицы categories)
 
   var photos = [];   // {file, blob, url}
   var busy = false;
+
+  // категории в форме товара: сперва готовые, затем добавленные администратором
+  var presetCategories = catEl.getAttribute('data-preset').split(',');
+  function renderCategoryOptions(selected) {
+    var value = selected !== undefined ? selected : catEl.value;
+    catEl.textContent = '';
+    var ph = document.createElement('option'); ph.value = ''; ph.textContent = 'Выберите…';
+    catEl.appendChild(ph);
+    presetCategories.concat(customCategories.map(function (c) { return c.name; }))
+      .forEach(function (name) {
+        var o = document.createElement('option'); o.textContent = name; catEl.appendChild(o);
+      });
+    // на случай, если у товара стоит категория, которой уже нет в списке (её удалили) —
+    // добавляем её отдельным пунктом, чтобы форма не потеряла выбор
+    if (value && catEl.querySelector('option[value="' + CSS.escape(value) + '"]') === null &&
+        !presetCategories.concat(customCategories.map(function (c) { return c.name; })).some(function (n) { return n === value; })) {
+      var extra = document.createElement('option'); extra.textContent = value; catEl.appendChild(extra);
+    }
+    catEl.value = value;
+  }
+  renderCategoryOptions('');
   var editing = null;   // товар, который сейчас редактируется
 
   /* ---------- сообщения ---------- */
@@ -468,6 +533,7 @@
   function showApp() {
     loginView.hidden = true; appView.hidden = false; logoutBtn.hidden = false;
     loadList();
+    loadCategories();
   }
 
   loginForm.addEventListener('submit', function (e) {
@@ -685,7 +751,7 @@
     nameEl.value = p.name || '';
     nameRoEl.value = p.name_ro || '';
     priceEl.value = p.price;
-    catEl.value = p.category || '';
+    renderCategoryOptions(p.category || '');
     descEl.value = p.description || '';
     descRoEl.value = p.description_ro || '';
     tagsEl.value = (p.tags || []).join(', ');
@@ -787,6 +853,95 @@
       if (!patched) removeFiles(uploaded);
       handleError(err, function (t) { say(t, 'err'); });
     }).then(function () { setBusy(false); });
+  }
+
+  /* ---------- категории наборов шаров ---------- */
+  function loadCategories() {
+    fetch(URL_ + '/rest/v1/categories?select=id,name,name_ro,icon&order=created_at.asc', { headers: headers(null) })
+      .then(function (r) { if (!r.ok) throw new Error('load'); return r.json(); })
+      .then(function (rows) {
+        customCategories = rows;
+        renderCategoryOptions();
+        renderCategories(rows);
+      })
+      .catch(function () {
+        catListEl.textContent = '';
+        var p = document.createElement('p'); p.className = 'photo-hint';
+        p.textContent = 'Не удалось загрузить категории. Запустите обновлённый supabase-setup.sql в Supabase (SQL Editor).';
+        catListEl.appendChild(p);
+      });
+  }
+
+  function renderCategories(rows) {
+    catListEl.textContent = '';
+    if (!rows.length) {
+      var empty = document.createElement('div'); empty.className = 'empty';
+      empty.textContent = 'Пока нет ни одной добавленной категории.';
+      catListEl.appendChild(empty);
+      return;
+    }
+    rows.forEach(function (c) {
+      var row = document.createElement('div'); row.className = 'cat-row';
+      var icon = document.createElement('span'); icon.className = 'cat-row__icon'; icon.textContent = c.icon || '🎈';
+      var info = document.createElement('div');
+      var name = document.createElement('div'); name.className = 'cat-row__name'; name.textContent = c.name;
+      info.appendChild(name);
+      if (c.name_ro) {
+        var ro = document.createElement('div'); ro.className = 'cat-row__nameRo'; ro.textContent = 'RO: ' + c.name_ro;
+        info.appendChild(ro);
+      }
+      var del = document.createElement('button'); del.type = 'button'; del.className = 'cat-row__del'; del.textContent = 'Удалить';
+      del.addEventListener('click', function () { removeCategory(c, del); });
+      row.appendChild(icon); row.appendChild(info); row.appendChild(del);
+      catListEl.appendChild(row);
+    });
+  }
+
+  catForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = catNameEl.value.trim();
+    var nameRo = catNameRoEl.value.trim();
+    var icon = catIconEl.value.trim();
+    if (!name) { setMsg(catMsgEl, 'Введите название категории.', 'err'); return catNameEl.focus(); }
+
+    var row = { name: name };
+    if (nameRo) row.name_ro = nameRo;
+    if (icon) row.icon = icon;
+
+    catSubmitBtn.disabled = true;
+    setMsg(catMsgEl, 'Сохранение…');
+    authed('/rest/v1/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify(row)
+    }).then(function (r) {
+      if (r.ok) return r;
+      return r.text().then(function (t) {
+        throw new Error(/duplicate|unique|23505/i.test(t)
+          ? 'Такая категория уже есть.'
+          : /categories|schema cache|relation|42p01|pgrst205/i.test(t)
+          ? 'В базе ещё нет таблицы категорий. Запустите обновлённый supabase-setup.sql в Supabase (SQL Editor).'
+          : 'Не удалось сохранить категорию (' + r.status + ').');
+      });
+    }).then(function () {
+      catForm.reset();
+      setMsg(catMsgEl, 'Категория «' + name + '» добавлена.', 'ok');
+      loadCategories();
+    }).catch(function (err) {
+      handleError(err, function (t) { setMsg(catMsgEl, t, 'err'); });
+    }).then(function () { catSubmitBtn.disabled = false; });
+  });
+
+  function removeCategory(c, btn) {
+    if (!confirm('Удалить категорию «' + c.name + '»? Товары в ней останутся, но плитка с сайта исчезнет.')) return;
+    btn.disabled = true;
+    authed('/rest/v1/categories?id=eq.' + encodeURIComponent(c.id), { method: 'DELETE' })
+      .then(check)
+      .then(loadCategories)
+      .catch(function (err) {
+        btn.disabled = false;
+        handleError(err, function (t) { alert(t); });
+      });
   }
 
   /* ---------- список ---------- */
