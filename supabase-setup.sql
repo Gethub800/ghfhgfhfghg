@@ -44,7 +44,31 @@ drop policy if exists "products: admin delete" on public.products;
 create policy "products: admin delete" on public.products
   for delete to authenticated using (public.is_shop_admin());
 
--- 3) Хранилище для фото (публичное: фото видны всем на сайте)
+-- 3) Категории наборов шаров — админ добавляет их сам, они показываются
+--    плитками на главной странице под заголовком «Наборы шаров в Кишинёве»
+create table if not exists public.categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  name_ro text,
+  icon text not null default '🎈',
+  created_at timestamptz not null default now()
+);
+
+alter table public.categories enable row level security;
+
+drop policy if exists "categories: read all" on public.categories;
+create policy "categories: read all" on public.categories
+  for select using (true);
+
+drop policy if exists "categories: admin insert" on public.categories;
+create policy "categories: admin insert" on public.categories
+  for insert to authenticated with check (public.is_shop_admin());
+
+drop policy if exists "categories: admin delete" on public.categories;
+create policy "categories: admin delete" on public.categories
+  for delete to authenticated using (public.is_shop_admin());
+
+-- 4) Хранилище для фото (публичное: фото видны всем на сайте)
 insert into storage.buckets (id, name, public)
 values ('product-images', 'product-images', true)
 on conflict (id) do update set public = true;
