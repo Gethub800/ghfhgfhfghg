@@ -50,9 +50,13 @@ create table if not exists public.categories (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
   name_ro text,
-  icon text not null default '🎈',
+  icon text,
   created_at timestamptz not null default now()
 );
+
+-- раньше значок был эмодзи с значением по умолчанию — теперь это фото, столбец необязателен
+alter table public.categories alter column icon drop default;
+alter table public.categories alter column icon drop not null;
 
 alter table public.categories enable row level security;
 
