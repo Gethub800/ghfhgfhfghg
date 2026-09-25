@@ -131,13 +131,23 @@
   .cat-form { display: grid; grid-template-columns: 64px 1fr 1fr auto; gap: 10px; align-items: end; margin-bottom: 16px; }
   .cat-form .field { margin-bottom: 0; }
   .cat-form input[type="text"] { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
-  .cat-icon-input { text-align: center; font-size: 18px; padding: 9px 4px !important; }
+  .cat-photo { position: relative; width: 64px; height: 64px; flex: none; }
+  .cat-photo__add {
+    width: 100%; height: 100%; padding: 0; border: 1.5px dashed var(--line); border-radius: 8px;
+    background: #fbfafa; color: var(--accent); font: 700 26px/1 inherit; cursor: pointer;
+  }
+  .cat-photo__add:hover { border-color: var(--accent); background: #fff5f8; }
+  .cat-photo__img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; display: block; }
+  .cat-photo__x {
+    position: absolute; top: -7px; right: -7px; width: 20px; height: 20px; padding: 0;
+    border: 0; border-radius: 50%; background: rgba(0, 0, 0, .65); color: #fff; font-size: 14px; line-height: 20px; cursor: pointer;
+  }
   .cat-list { display: grid; gap: 8px; }
   .cat-row {
     display: flex; align-items: center; gap: 12px; padding: 8px 10px;
     border: 1px solid #eee; border-radius: 8px;
   }
-  .cat-row__icon { font-size: 22px; width: 30px; text-align: center; flex: none; }
+  .cat-row__icon { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; flex: none; background: #eee; }
   .cat-row__name { font-weight: 600; }
   .cat-row__nameRo { font-size: 12px; color: var(--muted); }
   .cat-row__del {
@@ -339,8 +349,11 @@
 
     <form class="cat-form" id="catForm" novalidate>
       <div class="field">
-        <label for="catIcon">Значок</label>
-        <input type="text" id="catIcon" class="cat-icon-input" maxlength="4" placeholder="🎈">
+        <span class="label">Фото</span>
+        <input type="file" id="catPhoto" accept="image/*" hidden>
+        <div class="cat-photo" id="catPhotoBox">
+          <button type="button" class="cat-photo__add" id="catPhotoBtn" aria-label="Добавить фото категории">+</button>
+        </div>
       </div>
       <div class="field">
         <label for="catName">Название</label>
@@ -401,9 +414,11 @@
   var msgEl = $('formMsg'), submitBtn = $('submitBtn');
   var formTitle = $('formTitle'), editNote = $('editNote'), editNoteText = $('editNoteText'), cancelEditBtn = $('cancelEdit');
   var listEl = $('list'), statsEl = $('stats');
-  var catForm = $('catForm'), catIconEl = $('catIcon'), catNameEl = $('catName'), catNameRoEl = $('catNameRo');
+  var catForm = $('catForm'), catNameEl = $('catName'), catNameRoEl = $('catNameRo');
   var catMsgEl = $('catMsg'), catSubmitBtn = $('catSubmitBtn'), catListEl = $('catList');
+  var catPhotoInput = $('catPhoto'), catPhotoBox = $('catPhotoBox'), catPhotoBtn = $('catPhotoBtn');
   var customCategories = [];   // категории, которые добавил админ (из таблицы categories)
+  var catPhoto = null;         // {file, blob, url} — фото новой категории, ещё не сохранённой
 
   var photos = [];   // {file, blob, url}
   var busy = false;
@@ -882,7 +897,7 @@
     }
     rows.forEach(function (c) {
       var row = document.createElement('div'); row.className = 'cat-row';
-      var icon = document.createElement('span'); icon.className = 'cat-row__icon'; icon.textContent = c.icon || '🎈';
+      var icon = document.createElement('img'); icon.className = 'cat-row__icon'; icon.src = c.icon || ''; icon.alt = '';
       var info = document.createElement('div');
       var name = document.createElement('div'); name.className = 'cat-row__name'; name.textContent = c.name;
       info.appendChild(name);
@@ -897,23 +912,65 @@
     });
   }
 
+  catPhotoBtn.addEventListener('click', function () { catPhotoInput.click(); });
+
+  function setCatPhoto(item) {
+    if (catPhoto) URL.revokeObjectURL(catPhoto.url);
+    catPhoto = item;
+    catPhotoBox.textContent = '';
+    if (!item) {
+      var add = document.createElement('button');
+      add.type = 'button'; add.className = 'cat-photo__add'; add.id = 'catPhotoBtn';
+      add.setAttribute('aria-label', 'Добавить фото категории');
+      add.textContent = '+';
+      add.addEventListener('click', function () { catPhotoInput.click(); });
+      catPhotoBox.appendChild(add);
+      return;
+    }
+    var img = document.createElement('img'); img.className = 'cat-photo__img'; img.src = item.url; img.alt = '';
+    var x = document.createElement('button'); x.type = 'button'; x.className = 'cat-photo__x';
+    x.textContent = '×'; x.setAttribute('aria-label', 'Убрать фото');
+    x.addEventListener('click', function () { setCatPhoto(null); });
+    catPhotoBox.appendChild(img); catPhotoBox.appendChild(x);
+  }
+
+  catPhotoInput.addEventListener('change', function () {
+    var file = catPhotoInput.files[0];
+    catPhotoInput.value = '';
+    if (!file) return;
+    resize(file, THUMB_SIDE, 0.8).then(function (blob) {
+      setCatPhoto({ file: file, blob: blob, url: URL.createObjectURL(blob) });
+    }, function () {
+      setMsg(catMsgEl, 'Не удалось прочитать файл. Выберите изображение (JPG, PNG, WEBP).', 'err');
+    });
+  });
+
   catForm.addEventListener('submit', function (e) {
     e.preventDefault();
     var name = catNameEl.value.trim();
     var nameRo = catNameRoEl.value.trim();
-    var icon = catIconEl.value.trim();
     if (!name) { setMsg(catMsgEl, 'Введите название категории.', 'err'); return catNameEl.focus(); }
+    if (!catPhoto) {
+      setMsg(catMsgEl, 'Добавьте фото категории.', 'err');
+      var pb = catPhotoBox.querySelector('button'); if (pb) pb.focus();
+      return;
+    }
 
-    var row = { name: name };
-    if (nameRo) row.name_ro = nameRo;
-    if (icon) row.icon = icon;
+    var path = 'categories/' + uuid() + '.jpg';
+    var uploaded = false;
 
     catSubmitBtn.disabled = true;
-    setMsg(catMsgEl, 'Сохранение…');
-    authed('/rest/v1/categories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify(row)
+    setMsg(catMsgEl, 'Загрузка фото…');
+    uploadFile(path, catPhoto.blob).then(function () {
+      uploaded = true;
+      setMsg(catMsgEl, 'Сохранение…');
+      var row = { name: name, icon: publicUrl(path) };
+      if (nameRo) row.name_ro = nameRo;
+      return authed('/rest/v1/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify(row)
+      });
     }).then(function (r) {
       if (r.ok) return r;
       return r.text().then(function (t) {
@@ -925,9 +982,11 @@
       });
     }).then(function () {
       catForm.reset();
+      setCatPhoto(null);
       setMsg(catMsgEl, 'Категория «' + name + '» добавлена.', 'ok');
       loadCategories();
     }).catch(function (err) {
+      if (uploaded) removeFiles([path]);
       handleError(err, function (t) { setMsg(catMsgEl, t, 'err'); });
     }).then(function () { catSubmitBtn.disabled = false; });
   });
@@ -937,6 +996,7 @@
     btn.disabled = true;
     authed('/rest/v1/categories?id=eq.' + encodeURIComponent(c.id), { method: 'DELETE' })
       .then(check)
+      .then(function () { if (c.icon) removeFiles([pathFromUrl(c.icon)]); })
       .then(loadCategories)
       .catch(function (err) {
         btn.disabled = false;
