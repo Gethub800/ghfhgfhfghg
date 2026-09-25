@@ -164,11 +164,6 @@
     text-shadow: 0 0 5px rgba(255, 255, 255, .95), 0 0 12px rgba(255, 255, 255, .85);
   }
   .catalog__cat img { width: 76px; height: 84px; display: block; transition: transform .15s; }
-  .catalog__cat .catalog__cat-emoji {
-    width: 76px; height: 84px; display: flex; align-items: center; justify-content: center;
-    font-size: 46px; line-height: 1; transition: transform .15s;
-  }
-  .catalog__cat:hover .catalog__cat-emoji { transform: translateY(-3px); }
   .catalog__cat:hover img { transform: translateY(-3px); }
   .catalog__cat:focus-visible { outline: 2px solid #9d1346; outline-offset: 4px; border-radius: 4px; }
   .catalog__cat[data-cat]:not([data-cat=""])[aria-pressed="true"] span {
@@ -249,7 +244,6 @@
     .catalog__cats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 6px; }
     .catalog__cat { font-size: 12px; }
     .catalog__cat img { width: 56px; height: 62px; }
-    .catalog__cat .catalog__cat-emoji { width: 56px; height: 62px; font-size: 34px; }
     .catalog__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; }
   }
 
@@ -723,7 +717,7 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
 
     // плитки, добавленные администратором (таблица categories), — показываются
-    // после встроенных, с эмодзи-значком; название переводится вместе с остальным сайтом
+    // после встроенных, с фото, которое загрузил админ; название переводится вместе с остальным сайтом
     var dynCats = [];   // {span, cat}
     function addCategoryTile(cat) {
       var btn = document.createElement('button');
@@ -732,9 +726,11 @@
       btn.setAttribute('data-cat', cat.name);
       btn.setAttribute('aria-pressed', 'false');
 
-      var icon = document.createElement('span');
-      icon.className = 'catalog__cat-emoji';
-      icon.textContent = cat.icon || '🎈';
+      var icon = document.createElement('img');
+      icon.src = cat.icon || '';
+      icon.alt = '';
+      icon.width = 76;
+      icon.height = 84;
 
       var label = document.createElement('span');
       label.textContent = (lang === 'ro' && cat.name_ro) ? cat.name_ro : cat.name;
